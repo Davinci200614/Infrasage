@@ -1,0 +1,32 @@
+# Fault catalogue (guide §7). Each entry is a fixed contract; experiment scripts
+# must not invent faults. Editing an entry is a new version and invalidates the
+# calibration that used it.
+
+version: 1
+
+faults:
+  redis_process_stopped:
+    version: 1
+    target_service: redis
+    injection:
+      method: docker_stop
+      parameters: {}
+    revert:
+      method: docker_start
+    expected_symptom: "vote frontend errors, result stops updating"
+    label_component: redis
+    label_cause: redis_process_stopped
+    applicable_to_v0_1: true
+
+  postgres_unavailable:
+    version: 1
+    target_service: db
+    injection:
+      method: docker_stop
+      parameters: {}
+    revert:
+      method: docker_start
+    expected_symptom: "worker keeps retrying the database, result stops updating"
+    label_component: db
+    label_cause: postgres_unavailable
+    applicable_to_v0_1: true

@@ -1,0 +1,27 @@
+# Pinned target stack for the InfraSage digital twin (V0.1).
+# Any change here is a new environment version and invalidates calibration.
+
+target: docker-example-voting-app
+repository: https://github.com/dockersamples/example-voting-app
+commit: 63e9150ca17af4ed05880d4245e486481f73fcb4
+commit_date: "2024-10-10T11:05:02-04:00"
+upstream_file: docker-compose.yml
+vendored_as: lab/compose.yaml
+vendor_method: vendored
+compose_project: infrasage-lab
+
+# Upstream publishes no tags, so the commit hash is the pin.
+images:
+  redis:
+    ref: redis:7.4-alpine
+    digest: sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
+  db:
+    ref: postgres:15.10-alpine
+    digest: sha256:a58cec2ba7a60b4c08d51f2ca93c1ad65fbf96e75cf0c89b7c0d2684860d3bb3
+  vote:
+    build: ./vote
+    build_target: dev
+  result:
+    build: ./result
+  worker:
+    build: ./worker

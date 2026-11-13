@@ -1,0 +1,46 @@
+# InfraSage lab override. Layered over the unmodified upstream compose:
+#   docker compose -p infrasage-lab \
+#     -f lab/compose.yaml -f lab/docker-compose.infrasage.yml up -d
+#
+# The base file publishes vote/result on 0.0.0.0 and pins no image tags, so this
+# file uses `!override` to replace those lists instead of appending to them.
+# Needs Docker Compose >= 2.24.
+
+services:
+  vote:
+    ports: !override
+      - "127.0.0.1:8080:80"
+
+  result:
+    ports: !override
+      - "127.0.0.1:8081:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Loopback-only publishing so host-side collectors, psql/redis-cli and the
+  # project MCP servers can reach the lab. Drop these for the strongest
+  # isolation once collectors run inside the Compose network.
+  redis:
+    image: redis:7.4-alpine@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
+    ports: !override
+      - "127.0.0.1:6379:6379"
+
+  db:
+    image: postgres:15.10-alpine@sha256:a58cec2ba7a60b4c08d51f2ca93c1ad65fbf96e75cf0c89b7c0d2684860d3bb3
+    ports: !override
+      - "127.0.0.1:5432:5432"
+
+# worker: intentionally no healthcheck. The image ships no probe tools, and the
+# end-to-end vote -> result baseline (guide 5.3) is the real check that it works.
+# `restart: unless-stopped` is required: the worker exits(1) when redis or db
+# drops (worker/Program.cs catches and returns), so without it a redis/db fault
+# permanently kills the worker and the revert never restores steady state.
+# A manual `docker stop worker` is still respected, so worker faults inject fine.
+  worker:
+    restart: unless-stopped
+# Note: worker hardcodes `Server=db` and `redis` (worker/Program.cs), so the
+# connectivity_or_endpoint fault cannot be injected through env vars.

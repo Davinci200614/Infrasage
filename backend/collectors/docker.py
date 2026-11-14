@@ -17,8 +17,8 @@ from backend.collectors.base import BaseCollector
 
 class DockerCollector(BaseCollector):
 
-    def __init__(self):
-        self.client = docker.from_env()
+    def __init__(self, *, timeout=None):
+        self.client = docker.from_env() if timeout is None else docker.from_env(timeout=timeout)
 
     def collect(self):
         containers = self.client.containers.list(all=True)
@@ -156,3 +156,15 @@ class DockerCollector(BaseCollector):
         finally:
             result["retrieved_at"] = datetime.now(timezone.utc).isoformat()
             result["duration_seconds"] = perf_counter() - start
+
+    def probe_worker_redis(self, *, container_id=None, container_name=None,
+                           redis_host, redis_port, connection_timeout=1.0,
+                           execution_deadline=8.0, helper_image, _deadline_at=None):
+        """Execute the fixed TCP helper inside the explicit worker network context."""
+        from backend.collectors.tcp_probe import run_worker_probe
+        target = {k: v for k, v in {'container_id': container_id,
+                                   'container_name': container_name}.items() if v is not None}
+        config = dict(redis_host=redis_host, redis_port=redis_port,
+                      connection_timeout=connection_timeout, execution_deadline=execution_deadline,
+                      helper_image=helper_image)
+        return run_worker_probe(self, target, config, deadline_at=_deadline_at)

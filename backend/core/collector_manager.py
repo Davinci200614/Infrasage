@@ -2,7 +2,9 @@
 from copy import deepcopy
 from datetime import datetime, timezone
 import math
+import time
 from backend.collectors.docker import DockerCollector, valid_container_id, valid_container_name
+from backend.collectors.tcp_probe import CONFIG_KEYS, valid_probe_config
 from backend.diagnosis.catalogue_loader import LoadedCatalogues
 
 from backend.core.collection_orchestrator import CollectionOrchestrator
@@ -98,13 +100,18 @@ class CollectorManager:
         binding = execution.get("live_binding")
         if not self._valid_binding(binding):
             return self._result(test_id, "unavailable", error="Malformed or missing verified live binding")
-        # Other teammate routes remain in the source but are not enabled in Phase 2A.
+        operations = {"redis_runtime_state": "container_process_state",
+                      "worker_redis_connectivity": "worker_to_redis_tcp"}
         if (definition.get("provider") != "docker"
-                or execution.get("logical_operation") != "container_process_state"
-                or test_id != "redis_runtime_state"):
+                or test_id not in operations
+                or execution.get("logical_operation") != operations[test_id]
+                or binding["operation"] != operations[test_id]):
             return self._result(test_id, "unavailable", error="Unsupported provider, test or operation")
         if not self._target_matches(target, binding):
             return self._result(test_id, "unavailable", error="Missing, ambiguous or mismatched target identity")
+        if test_id == "worker_redis_connectivity" and any(
+                key in target and target[key] != binding[key] for key in CONFIG_KEYS):
+            return self._result(test_id, "unavailable", error="Probe endpoint or configuration differs from verified binding")
         age = (datetime.now(timezone.utc) - datetime.fromisoformat(binding["verified_at"])).total_seconds()
         if age < 0 or age > binding["freshness_max_seconds"]:
             return self._result(test_id, "unavailable", error="Runtime binding verification expired; verify again")
@@ -117,6 +124,9 @@ class CollectorManager:
                         or result.get("docker_endpoint") != binding["docker_endpoint"]):
                     return {**result, "status": "failed", "binding": deepcopy(binding),
                             "error": "Docker identity changed since binding verification"}
+                if test_id == "worker_redis_connectivity" and not self._connectivity_result_matches(result, binding):
+                    return {**result, "status": "failed", "binding": deepcopy(binding),
+                            "error": "Probe result differs from verified endpoint or namespace"}
             result["binding"] = deepcopy(binding)
             return result
         except Exception as error:
@@ -127,6 +137,10 @@ class CollectorManager:
     # --------------------------------------------------
 
     def _execute_docker_test(self, test_id, operation, target):
+
+        if operation == "worker_to_redis_tcp":
+            binding = self._get_test_definition(test_id)["execution"]["live_binding"]
+            return self._execute_connectivity(test_id, target, {key: binding[key] for key in CONFIG_KEYS})
 
         if operation == "container_process_state":
             return self._execute_runtime_state(
@@ -303,12 +317,12 @@ class CollectorManager:
 
         return result
 
-    def _docker(self):
+    def _docker(self, *, timeout=None):
         if self.docker_collector is None:
             if self.collection_orchestrator is not None:
                 self.docker_collector = self.collection_orchestrator.docker_collector
             else:
-                self.docker_collector = DockerCollector()
+                self.docker_collector = DockerCollector() if timeout is None else DockerCollector(timeout=timeout)
                 self._owns_docker = True
         return self.docker_collector
 
@@ -317,10 +331,12 @@ class CollectorManager:
     def _valid_binding(binding):
         if not isinstance(binding, dict):
             return False
-        if (binding.get("provider") != "docker" or binding.get("operation") != "container_process_state"
+        if (binding.get("provider") != "docker" or binding.get("operation") not in ("container_process_state", "worker_to_redis_tcp")
                 or not valid_container_id(binding.get("container_id"))
                 or not valid_container_name(binding.get("container_name"))
                 or not isinstance(binding.get("docker_endpoint"), str) or not binding["docker_endpoint"]):
+            return False
+        if binding["operation"] == "worker_to_redis_tcp" and not valid_probe_config(binding):
             return False
         limit = binding.get("freshness_max_seconds")
         if isinstance(limit, bool) or not isinstance(limit, (int, float)) or not 0 < limit <= 15:
@@ -404,3 +420,85 @@ class CollectorManager:
             self.docker_collector = None
             self._owns_docker = False
 
+
+    def _execute_connectivity(self, test_id, target, config):
+        start = time.monotonic()
+        deadline = start + config['execution_deadline']
+        try:
+            # Bound initial Docker version negotiation as well as probe requests.
+            provider = self._docker(timeout=min(2, config['execution_deadline']))
+            result = provider.probe_worker_redis(
+                container_id=target.get('container_id'), container_name=target.get('container_name'),
+                **config, _deadline_at=deadline)
+            return {**result, 'test_id': test_id}
+        except Exception as error:
+            return {**self._result(test_id, 'failed', error=str(error)),
+                    'source': 'docker', 'probe_config': dict(config),
+                    'duration_seconds': time.monotonic() - start}
+
+    @staticmethod
+    def _connectivity_result_matches(result, binding):
+        data, payload = result.get('data'), result.get('probe_result')
+        if not isinstance(data, dict) or not isinstance(payload, dict):
+            return False
+        endpoint = {'host': binding['redis_host'], 'port': binding['redis_port']}
+        return (result.get('probe_config') == {key: binding[key] for key in CONFIG_KEYS}
+                and result.get('namespace') == 'container:' + binding['container_id']
+                and result.get('helper_image') == binding['helper_image']
+                and result.get('helper_removed') is True
+                and data.get('endpoint') == endpoint and payload.get('endpoint') == endpoint
+                and payload.get('protocol') == 'infrasage-tcp-v1'
+                and payload.get('request_id') == result.get('request_id')
+                and payload.get('worker_id') == binding['container_id']
+                and payload.get('status') == 'completed' and not payload.get('error')
+                and payload.get('outcome') == data.get('outcome')
+                and data.get('outcome') in ('connected', 'refused', 'timeout')
+                and payload.get('observed_at') == result.get('observed_at'))
+
+    def verify_connectivity_binding(self, test, target, *, redis_host, redis_port,
+                                    connection_timeout=1.0, execution_deadline=8.0, helper_image):
+        """Verify the fixed helper operation before enabling a scoped lab binding.
+
+        Verification is itself a real TCP probe; execution performs another probe.
+        DNS/launch/deadline/cleanup failures never activate the binding.
+        """
+        test_id = self._get_test_id(test)
+        if test_id != 'worker_redis_connectivity':
+            return self._result(None, 'unavailable', error='Only worker_redis_connectivity can use this verification')
+        self._verified_definitions.pop(test_id, None)
+        if not isinstance(self.catalogue, LoadedCatalogues) or not self.catalogue.research_mode:
+            return self._result(test_id, 'unavailable', error='Explicit research catalogues required')
+        original = self.catalogue.test_metadata.get(test_id)
+        if (not isinstance(original, dict) or not isinstance(original.get('execution'), dict)
+                or not isinstance(original.get('availability'), dict)
+                or original['execution'].get('logical_operation') != 'worker_to_redis_tcp'
+                or original['availability'].get('simulation') is not True):
+            return self._result(test_id, 'unavailable', error='Unsupported catalogue operation or research availability')
+        config = dict(redis_host=redis_host, redis_port=redis_port, connection_timeout=connection_timeout,
+                      execution_deadline=execution_deadline, helper_image=helper_image)
+        if (not valid_probe_config(config) or not self._target_matches(target, target)
+                or any(key in target and target[key] != config[key] for key in CONFIG_KEYS)):
+            return self._result(test_id, 'unavailable', error='Invalid explicit worker, Redis endpoint or probe configuration')
+        result = self._execute_connectivity(test_id, target, config)
+        if result.get('status') != 'completed':
+            return result
+        identity = result.get('target', {})
+        binding = {'provider': 'docker', 'operation': 'worker_to_redis_tcp', **identity, **config,
+                   'docker_endpoint': result.get('docker_endpoint'), 'verified_at': result.get('observed_at'),
+                   'freshness_max_seconds': 15}
+        if (not self._valid_binding(binding) or not self._target_matches(target, binding)
+                or not self._connectivity_result_matches(result, binding)
+                or result.get('source') != 'docker' or result.get('error') or result.get('errors')
+                or result.get('target_identifier') != 'docker:' + binding.get('container_id', '')
+                or result.get('data', {}).get('id') != binding.get('container_id')
+                or result.get('data', {}).get('name') != binding.get('container_name')):
+            return {**result, 'status': 'failed', 'error': 'Malformed probe verification evidence'}
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(binding['verified_at'])).total_seconds()
+        if not 0 <= age <= 15:
+            return {**result, 'status': 'unavailable', 'error': 'Stale probe verification evidence'}
+        definition = deepcopy(original)
+        definition['provider'] = 'docker'
+        definition['availability']['live'] = True
+        definition['execution'].update(binding_status='verified', live_binding=binding)
+        self._verified_definitions[test_id] = definition
+        return {**result, 'binding': deepcopy(binding), 'verification_scope': 'process-local research only'}

@@ -1,1 +1,4 @@
 pytest>=8.0,<10
+requests>=2.31,<3
+docker>=7,<8
+PyYAML>=6,<7

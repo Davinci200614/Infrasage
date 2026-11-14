@@ -19,6 +19,35 @@ before the earlier one passes its checks.
 `backend/twin/STATUS.md` is the phase tracker: what passed, the evidence, open
 findings, and the next session's scope. Update it when a phase passes.
 
+The agreed V0.1 integration contracts (one InvestigationOrchestrator,
+CollectorManager facade, three catalogues, DiagnosticAdapter/Normalizer) are
+summarized in the Architecture section below.
+
+## Architecture (V0.1 target)
+
+InfraSage runs as **one Python backend** with a single **InvestigationOrchestrator**
+owning the diagnostic lifecycle. A thin **CollectorManager** dispatches to
+providers (Netdata primary, Docker precision). A **DiagnosticAdapter** normalizes
+raw results to canonical test outcomes. The **Bayesian engine** updates beliefs;
+the **energy-aware planner** chooses the next test/stop/abstain. The **digital
+twin** (backend/twin/) runs offline calibration and later selective validation.
+
+Key invariants:
+- **One orchestrator.** No second "collection orchestrator" with investigation
+  state. The existing `CollectionOrchestrator` is preserved as the batch
+  collection implementation behind `CollectorManager`.
+- **Three catalogues**, linked by stable IDs:
+  - `knowledge.yaml` — hypotheses + qualitative `supports/contradicts` relations
+  - `tests.yaml` — executable bindings: provider, operation, outcomes, costs
+  - `probabilities.json` — priors + likelihoods `P(outcome | hypothesis, test)`
+- **Netdata is primary observer.** Docker/precision probes fill verified gaps only.
+- **DiagnosticAdapter** separates raw collection from Bayes math. It produces
+  `Observation` objects with `execution_status` (COMPLETED/FAILED/UNAVAILABLE),
+  never converting errors into diagnostic outcomes.
+- **Planner decides, orchestrator executes.** The planner returns a test ID;
+  the orchestrator resolves it in `tests.yaml` and calls `CollectorManager.execute_test()`.
+- **Ground truth isolation.** `backend/twin/` is never imported by diagnostic packages.
+
 ## Commands
 
 `requirements.txt` holds the twin's Python dependencies (pytest, PyYAML). The
@@ -98,7 +127,7 @@ that group from whichever process runs the test or run script.
 | `redis` | Inspect Redis keys/pubsub, verify cache faults | `redis://localhost:6379` (needs lab Redis running) |
 | `fs` | Read/write under repo root (`experiments/`, `lab/`, `backend/twin/`) | Local filesystem (scoped to repo) |
 | `git` | Diff, status, commit, blame — cleaner than shell `git` | Local repo |
-| `github` | Create PRs, read issues, link runs to issues | `GITHUB_PERSONAL_ACCESS_TOKEN` in `.env` |
+| `github` | Create PRs, read issues, link runs to issues | `~/.config/opencode/github.token` (a PAT) |
 
 **To use the lab-dependent servers (docker, postgres, redis):**
 1. Start the lab: `docker compose -p infrasage-lab -f lab/compose.yaml -f lab/docker-compose.infrasage.yml up -d`
@@ -119,3 +148,9 @@ that group from whichever process runs the test or run script.
   argument in `opencode.json`
 - `.gitignore` must exclude `.env` (not committed)
 - `fs` is scoped to this repo only; it cannot escape
+- `github` reads its PAT from `~/.config/opencode/github.token` (chmod 600, no
+  trailing newline) via `{file:...}`; opencode never reads `.env`. After writing
+  the token, reconnect the server:
+  ```sh
+  opencode api post '/api/experimental/mcp/github/connect?location[directory]=/home/divinesword/INDIA/Infrasage'
+  ```

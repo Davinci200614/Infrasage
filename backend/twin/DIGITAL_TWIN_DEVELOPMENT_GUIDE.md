@@ -2,6 +2,12 @@
 
 This document is the implementation brief for building the **digital twin** subsystem of InfraSage. It is written for a coding agent or engineer who has not read the project design notes. Read it fully before writing code. Where this guide and the design note disagree, stop and raise the conflict rather than choosing silently.
 
+The agreed V0.1 integration contracts for the diagnostic backend (one
+InvestigationOrchestrator, CollectorManager facade, three catalogues,
+DiagnosticAdapter/Normalizer) are summarized in `AGENTS.md`; the twin must call
+the public investigation entry point defined there and use the same collector
+implementations.
+
 ---
 
 ## 1. Purpose
@@ -59,6 +65,13 @@ These are non-negotiable. Violating them invalidates the experimental results.
 
 ## 4. Architecture
 
+The diagnostic backend architecture is summarized in `AGENTS.md`; the twin's place in it:
+
+- **Twin Manager** is a specialized experiment executor, not another diagnostic orchestrator.
+- It calls the public investigation entry point (`investigate(LabTarget) -> InvestigationResult`).
+- It uses the **same collector implementations** from `backend/collectors/` via the `CollectorManager` facade.
+- Ground truth is written **before** investigation and read **after** the diagnosis is frozen.
+
 ```
 +-----------------------------------------------------------------+
 |                       Experiment Runner                          |
@@ -82,8 +95,9 @@ These are non-negotiable. Violating them invalidates the experimental results.
                           v
   +-----------------------------------------------+
   |  InfraSage diagnostic system (UNDER TEST)      |
-  |  backend/collectors -> normalizer ->           |
-  |  backend/diagnosis -> planner -> report        |
+  |  backend/collectors -> CollectorManager ->     |
+  |  DiagnosticAdapter -> InvestigationOrchestrator|
+  |  -> Bayesian engine -> Planner -> report       |
   |  (or abstain)                                  |
   |  NO access to backend/twin/ground_truth        |
   +-----------------------+-----------------------+
@@ -93,7 +107,8 @@ These are non-negotiable. Violating them invalidates the experimental results.
   |  Run record -> experiments/runs/ (calibration  |
   |  or evaluation split)                          |
   +-----------------------------------------------+
-```
+
+The twin orchestrates one run end-to-end but never inspects or forwards the ground-truth label to the diagnostic call. It reads the label only at scoring time, after the diagnosis is frozen.
 
 ### 4.1 Component responsibilities
 

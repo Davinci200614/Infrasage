@@ -4,17 +4,18 @@
 
 InfraSage: a Bayesian troubleshooting system that diagnoses Linux/Docker
 infrastructure incidents and abstains when it cannot tell. The diagnostic
-packages are still stubs; the digital twin (`backend/twin/`, `lab/`) is
-implemented through §18 step 4. Check a file before assuming code exists, and
-build tooling rather than "fixing" something that looks broken.
+packages are still stubs; the digital twin (`backend/twin/`, `lab/`) is built
+incrementally — `backend/twin/STATUS.md` records the last build-order step that
+passed. Check a file before assuming code exists, and build tooling rather than
+"fixing" something that looks broken.
 
 ## Read this first
 
 `backend/twin/DIGITAL_TWIN_DEVELOPMENT_GUIDE.md` is the normative brief for the
 digital twin (the Docker fault-injection lab that produces labeled calibration
-and evaluation data). Where it conflicts with a design note, stop and ask
-instead of choosing silently. Build in its §18 order; don't start a later step
-before the earlier one passes its checks.
+and evaluation data). Where it conflicts with the Architecture section below,
+stop and ask instead of choosing silently. Build in its §18 order; don't start a
+later step before the earlier one passes its checks.
 
 `backend/twin/STATUS.md` is the phase tracker: what passed, the evidence, open
 findings, and the next session's scope. Update it when a phase passes.
@@ -35,20 +36,41 @@ twin** (`backend/twin/`) runs offline calibration and later selective validation
 Key invariants:
 
 - **One orchestrator.** No second "collection orchestrator" with investigation
-  state. The existing `CollectionOrchestrator` is preserved as the batch
-  collection implementation behind `CollectorManager`.
+  state. The teammate's `CollectionOrchestrator` (branch
+  `feature/docker-collector`, not yet merged) becomes the batch collection
+  implementation behind `CollectorManager`.
 - **Three catalogues**, linked by stable IDs:
   - `knowledge.yaml` — hypotheses + qualitative `supports`/`contradicts` relations
   - `tests.yaml` — executable bindings: provider, operation, outcomes, costs
   - `probabilities.json` — priors + likelihoods `P(outcome | hypothesis, test)`
 - **Netdata is primary observer.** Docker/precision probes fill verified gaps only.
 - **DiagnosticAdapter** separates raw collection from Bayes math. It produces
-  `Observation` objects with `execution_status` (COMPLETED/FAILED/UNAVAILABLE),
-  never converting errors into diagnostic outcomes.
+  `Observation` objects whose `execution_status` is `completed` or `error` —
+  matching the `ExecutionStatus` type in `backend/api/investigate.py` — and never
+  converts errors into diagnostic outcomes. `UNAVAILABLE` is a target-design
+  value not yet in that enum; don't emit it until the type allows it.
 - **Planner decides, orchestrator executes.** The planner returns a test ID;
   the orchestrator resolves it in `tests.yaml` and calls
   `CollectorManager.execute_test()`.
 - **Ground truth isolation.** `backend/twin/` is never imported by diagnostic packages.
+
+## Collectors
+
+`CollectorManager` (in `backend/collectors/`) exposes two methods — this is the
+whole contract the orchestrator and the twin use:
+
+```python
+collect_snapshot(target) -> dict          # batch: metrics + container state
+execute_test(test_definition, target)     # on-demand: one probe -> Observation
+```
+
+Target providers: Netdata (primary metrics) and Docker (container state, health,
+ports, restarts, CPU/memory). Optional additions: `docker_logs.py` and
+`docker_events.py`.
+
+Logs are **on-demand only** — never part of the initial batch snapshot. They
+belong behind `execute_test()`, not `collect_snapshot()`. The events collector
+is deferred; confirm it adds discriminating evidence before building it.
 
 ## Commands
 
@@ -131,3 +153,17 @@ The lab runs on localhost ports (bound to `127.0.0.1` in the override). Verify
 health before injecting any fault: all five services running, Redis reachable,
 PostgreSQL accepting connections, and a test vote appears in the `result`
 output.
+
+## Subagents
+
+When writing code or advancing the project, spawn a relevant subagent for
+verification tasks:
+
+- **tester**: write/run tests for new code (do not change application code)
+- **reviewer**: review changes for bugs, safety, performance (read-only)
+- **explorer**: fast search across the codebase for patterns, symbols, refs
+- **general**: multi-step research or parallel tasks
+
+Use the `subagent` tool with `background=false` (default) for sequential work.
+Each subagent runs in a fresh context — include all relevant context in the
+prompt. Subagents are ephemeral; they exit on completion.

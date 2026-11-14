@@ -39,7 +39,7 @@ Evidence:
 
 Faults implemented: `docker_stop` / `docker_start` for `redis` and `db` only.
 
-## Next session — Phase 3: experiment runner (§18 step 5)
+## Phase 3 — experiment runner (§18 step 5) (done 2026-11-14)
 
 Do not start step 6 before step 5 passes.
 
@@ -58,6 +58,24 @@ Do not start step 6 before step 5 passes.
    stack on every exit path.
 6. Tests: fake docker CLI + local HTTP stub (see `backend/twin/tests/conftest.py`),
    stub diagnostic, assert `lab_status`, label timing, and teardown on failure.
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 26 passed
+```
+
+- `backend/twin/runner/experiment.py` wires §8.1 steps 2–11 (reset → baseline →
+  warm-up → inject → label → investigate → freeze → score → revert → teardown →
+  persist) with the fixed-answer stub from `backend/twin/runner/experiment.py`.
+- Failures map to `invalid_baseline` / `injection_failed` / `error` / `dirty`;
+  no silent retries.
+- Label is written after verified injection and before `investigate(...)`; the
+  run record only gains `ground_truth_label` + `scored` after the diagnosis is
+  frozen.
+
+Next session: Phase 4 — call `backend.api.investigate`, then wrap the existing
+`backend/collectors/` into `available_tests`/`execute_test`/`TestResult`.
 
 ## Later phases (§18)
 

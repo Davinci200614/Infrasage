@@ -31,13 +31,23 @@ that project label) and always tear down with `-v`.
 - Docker Engine 29.9.3, Compose v5.7.1, service enabled at boot.
 - The user must be in the `docker` group. Existing shells (including opencode)
   pick that up only after a restart; use `sg docker -c '<command>'` meanwhile.
-- **Docker storage is capped at 40 GiB**: `/var/lib/docker.img` is an ext4
+- **Docker storage is capped at 15 GiB**: `/var/lib/docker.img` is an ext4
   loopback mounted at `/var/lib/docker` (`/etc/fstab`, `nofail`), so image
   builds, containers, volumes and build cache all share that ceiling. The loop
   file lives on the btrfs root, which Docker's overlayfs cannot quota directly.
   Images and build cache are stored by containerd, so its root is moved inside
   the cap: `root = "/var/lib/docker/containerd"` in `/etc/containerd/config.toml`.
   Check with `docker system df`; if it fills, `docker builder prune` first.
+
+  To reduce from 40 GiB to 15 GiB:
+  1. Stop Docker: `sudo systemctl stop docker.socket docker.service containerd.service`
+  2. Umount: `sudo umount /var/lib/docker`
+  3. Delete old file: `sudo rm -f /var/lib/docker.img`
+  4. Create new 15 GiB file: `sudo truncate -s 15G /var/lib/docker.img`
+  5. Format: `sudo mkfs.ext4 /var/lib/docker.img`
+  6. Mount: `sudo mount /var/lib/docker.img /var/lib/docker`
+  7. Restart: `sudo systemctl start containerd docker`
+  8. Rebuild lab images: `sg docker -c 'docker compose -p infrasage-lab -f lab/compose.yaml -f lab/docker-compose.infrasage.yml build'`
 
 ## Ports (loopback only)
 

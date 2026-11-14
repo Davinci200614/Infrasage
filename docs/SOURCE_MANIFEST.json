@@ -1,0 +1,29 @@
+{
+  "counts": {
+    "hypotheses": 15,
+    "tests": 20,
+    "qualitative_test_relationship_groups": 19,
+    "conditional_likelihood_distributions": 300
+  },
+  "sources": [
+    {
+      "id": "voting_app",
+      "url": "https://github.com/dockersamples/example-voting-app",
+      "used_for": "Five-component application topology; not probability inference",
+      "license_note": "Check source license before copying original definitions"
+    },
+    {
+      "id": "netdata",
+      "url": "https://learn.netdata.cloud/docs/live-view",
+      "used_for": "General monitoring and on-demand Function capabilities; no live endpoint verification"
+    },
+    {
+      "id": "awesome_prometheus_alerts",
+      "url": "https://github.com/samber/awesome-prometheus-alerts",
+      "used_for": "Monitoring-condition taxonomy and candidate observations; selected rule expressions NOT imported verbatim",
+      "license_note": "Check upstream attribution/license when importing rule text"
+    }
+  ],
+  "data_provenance": "All hypothesis-to-outcome associations are engineering proposals based on service topology and documented monitoring categories; no automated import of source rules and no Netdata discovery occurred",
+  "reproducibility": "Model numbers are made for software integration, not incident probability calibration"
+}

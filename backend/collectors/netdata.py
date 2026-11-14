@@ -6,17 +6,25 @@ from backend.collectors.base import BaseCollector
 
 class NetdataCollector(BaseCollector):
 
+    DISK_CHART_PREFIXES = (
+        "disk_space.",
+        "disk_ops.",
+        "disk_util.",
+        "disk_await.",
+        "disk.io"
+    )
+
     def __init__(self, base_url="http://localhost:19999"):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
 
-    def _get_chart_data(self, chart_id):
+    def _get_chart_data(self, chart_id, after=-5, points=1):
         url = f"{self.base_url}/api/v1/data"
 
         params = {
             "chart": chart_id,
-            "after": -5,
-            "points": 1
+            "after": after,
+            "points": points
         }
 
         response = self.session.get(
@@ -31,7 +39,20 @@ class NetdataCollector(BaseCollector):
         if not result.get("data"):
             return None
 
-        return dict(zip(result["labels"], result["data"][0]))
+        labels = result.get("labels", [])
+
+        # Select the first sample containing available values
+        for row in result["data"]:
+            values = dict(zip(labels, row))
+
+            if any(
+                value is not None
+                for key, value in values.items()
+                if key != "time"
+            ):
+                return values
+
+        return None
 
     def _get_network_interfaces(self):
         url = f"{self.base_url}/api/v1/charts"
@@ -47,6 +68,25 @@ class NetdataCollector(BaseCollector):
             if chart_id.startswith("net.")
         ]
 
+    def _get_disk_charts(self):
+        url = f"{self.base_url}/api/v1/charts"
+
+        response = self.session.get(url, timeout=5)
+        response.raise_for_status()
+
+        charts = response.json().get("charts", {})
+
+        return {
+            chart_id: {
+                "title": chart.get("title"),
+                "units": chart.get("units"),
+                "family": chart.get("family"),
+                "context": chart.get("context")
+            }
+            for chart_id, chart in charts.items()
+            if chart_id.startswith(self.DISK_CHART_PREFIXES)
+        }
+
     def collect(self):
         results = {
             "source": "netdata",
@@ -56,10 +96,12 @@ class NetdataCollector(BaseCollector):
             "swap": None,
             "network": {},
             "network_details": {},
+            "disk": {},
+            "disk_metadata": {},
             "errors": {}
         }
 
-        # 1. Métriques système
+        # 1. System metrics
         charts = {
             "cpu": "system.cpu",
             "ram": "system.ram",
@@ -82,13 +124,13 @@ class NetdataCollector(BaseCollector):
             ) as error:
                 results["errors"][category] = str(error)
 
-        # 2. Découverte des interfaces réseau
+        # 2. Network interfaces discovery
         try:
             interfaces = self._get_network_interfaces()
 
             for interface in interfaces:
 
-                # Bande passante
+                # Bandwidth
                 bandwidth_chart = f"net.{interface}"
 
                 try:
@@ -109,7 +151,7 @@ class NetdataCollector(BaseCollector):
                 ) as error:
                     results["errors"][bandwidth_chart] = str(error)
 
-                # Autres métriques de l'interface
+                # Other interface metrics
                 metric_charts = {
                     "packets": f"net_packets.{interface}",
                     "errors": f"net_errors.{interface}",
@@ -152,7 +194,43 @@ class NetdataCollector(BaseCollector):
         ) as error:
             results["errors"]["network_discovery"] = str(error)
 
-        # 3. Métriques dérivées
+        # 3. Disk metrics discovery and collection
+        try:
+            disk_charts = self._get_disk_charts()
+
+            for chart_id, metadata in disk_charts.items():
+                try:
+                    data = self._get_chart_data(
+                        chart_id,
+                        after=-60,
+                        points=5
+                    )
+
+                    if data is None:
+                        results["errors"][chart_id] = (
+                            "No data available"
+                        )
+                    else:
+                        results["disk"][chart_id] = data
+                        results["disk_metadata"][chart_id] = metadata
+
+                except (
+                    requests.RequestException,
+                    ValueError,
+                    KeyError,
+                    TypeError
+                ) as error:
+                    results["errors"][chart_id] = str(error)
+
+        except (
+            requests.RequestException,
+            ValueError,
+            KeyError,
+            TypeError
+        ) as error:
+            results["errors"]["disk_discovery"] = str(error)
+
+        # 4. Derived metrics
         results["derived"] = {
             "cpu": self._derive_cpu_metrics(results["cpu"]),
             "ram": self._derive_ram_metrics(
@@ -163,6 +241,10 @@ class NetdataCollector(BaseCollector):
             "network": self._derive_network_metrics(
                 results["network"],
                 results["network_details"]
+            ),
+            "disk": self._derive_disk_metrics(
+                results["disk"],
+                results["disk_metadata"]
             )
         }
 
@@ -178,24 +260,33 @@ class NetdataCollector(BaseCollector):
             "guest", "guest_nice"
         ]
 
-        activity = sum(
-            cpu.get(key, 0) or 0
+        # Do not interpret unavailable dimensions as zero
+        values = [
+            cpu.get(key)
             for key in activity_keys
-        )
+            if cpu.get(key) is not None
+        ]
+
+        activity = sum(values) if values else None
 
         return {
             "activity_percent": activity,
-            "iowait_percent": cpu.get("iowait", 0)
+            "iowait_percent": cpu.get("iowait")
         }
 
     def _derive_ram_metrics(self, ram, available):
         if ram is None:
             return None
 
-        free = ram.get("free", 0) or 0
-        used = ram.get("used", 0) or 0
-        cached = ram.get("cached", 0) or 0
-        buffers = ram.get("buffers", 0) or 0
+        free = ram.get("free")
+        used = ram.get("used")
+        cached = ram.get("cached")
+        buffers = ram.get("buffers")
+
+        required_values = [free, used, cached, buffers]
+
+        if any(value is None for value in required_values):
+            return None
 
         total = free + used + cached + buffers
 
@@ -222,8 +313,11 @@ class NetdataCollector(BaseCollector):
         if swap is None:
             return None
 
-        free = swap.get("free", 0) or 0
-        used = swap.get("used", 0) or 0
+        free = swap.get("free")
+        used = swap.get("used")
+
+        if free is None or used is None:
+            return None
 
         total = free + used
 
@@ -256,7 +350,7 @@ class NetdataCollector(BaseCollector):
     def _derive_network_metrics(self, network, network_details):
         derived = {}
 
-        # Bande passante
+        # Bandwidth
         for chart_id, data in network.items():
             interface = chart_id.split(".", 1)[1]
 
@@ -273,7 +367,7 @@ class NetdataCollector(BaseCollector):
                 )
             }
 
-        # Autres métriques réseau
+        # Other network metrics
         for interface, details in network_details.items():
             metrics = derived.setdefault(interface, {})
 
@@ -323,5 +417,84 @@ class NetdataCollector(BaseCollector):
 
             if mtu is not None:
                 metrics["mtu_bytes"] = mtu.get("mtu")
+
+        return derived
+
+    def _derive_disk_metrics(self, disk, disk_metadata):
+        derived = {}
+
+        for chart_id, data in disk.items():
+            metadata = disk_metadata.get(chart_id, {})
+
+            entry = {
+                "raw": data,
+                "title": metadata.get("title"),
+                "units": metadata.get("units"),
+                "family": metadata.get("family"),
+                "context": metadata.get("context")
+            }
+
+            # Disk space
+            if chart_id.startswith("disk_space."):
+                available = data.get("avail")
+                used = data.get("used")
+
+                reserved = data.get(
+                    "reserved for root",
+                    data.get("reserved", 0)
+                )
+
+                if (
+                    available is not None
+                    and used is not None
+                    and reserved is not None
+                ):
+                    total = available + used + reserved
+
+                    entry["space"] = {
+                        "available_gib": available,
+                        "used_gib": used,
+                        "reserved_gib": reserved,
+                        "total_gib": total,
+                        "used_percent": (
+                            (used / total) * 100
+                            if total > 0
+                            else None
+                        )
+                    }
+
+            # Disk utilization
+            elif chart_id.startswith("disk_util."):
+                utilization = data.get("utilization")
+
+                if utilization is not None:
+                    entry["utilization_percent"] = abs(utilization)
+
+            # Read/write operations
+            elif chart_id.startswith("disk_ops."):
+                reads = self._absolute_value(data.get("reads"))
+                writes = self._absolute_value(data.get("writes"))
+
+                entry["operations_per_second"] = {
+                    "reads": reads,
+                    "writes": writes,
+                    "total": (
+                        reads + writes
+                        if reads is not None and writes is not None
+                        else None
+                    )
+                }
+
+            # Read/write latency
+            elif chart_id.startswith("disk_await."):
+                reads = self._absolute_value(data.get("reads"))
+                writes = self._absolute_value(data.get("writes"))
+
+                entry["latency_ms_per_operation"] = {
+                    "reads": reads,
+                    "writes": writes
+                }
+
+            derived[chart_id] = entry
 
         return derived

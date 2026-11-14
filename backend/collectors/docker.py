@@ -24,6 +24,9 @@ class DockerCollector(BaseCollector):
                 config = attrs.get("Config", {})
                 healthcheck_config = config.get("Healthcheck")
 
+                # Docker Compose labels
+                labels = config.get("Labels") or {}
+
                 healthcheck_configured = bool(
                     healthcheck_config
                     and healthcheck_config.get("Test")
@@ -58,6 +61,15 @@ class DockerCollector(BaseCollector):
                     "state_error": state.get("Error"),
                     "started_at": state.get("StartedAt"),
                     "finished_at": state.get("FinishedAt"),
+
+                    # Docker Compose information
+                    "labels": labels,
+                    "compose_service": labels.get(
+                        "com.docker.compose.service"
+                    ),
+                    "compose_project": labels.get(
+                        "com.docker.compose.project"
+                    ),
 
                     # Healthcheck details
                     "healthcheck_configured": healthcheck_configured,

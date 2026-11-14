@@ -8,8 +8,9 @@ class CollectorManager:
 
     Responsibilities:
     - Collect the initial infrastructure snapshot.
-    - Resolve diagnostic tests from the catalogue.
+    - Resolve diagnostic tests from LoadedCatalogues.
     - Enforce live execution permissions.
+    - Resolve containers using Docker Compose service labels.
     - Dispatch supported operations to CollectionOrchestrator.
     - Return raw execution results.
 
@@ -34,12 +35,7 @@ class CollectorManager:
     # --------------------------------------------------
 
     def collect_snapshot(self, target=None):
-        """
-        Collect the initial infrastructure state.
-
-        The existing CollectionOrchestrator remains responsible
-        for coordinating Netdata and Docker collectors.
-        """
+        """Collect the initial infrastructure state."""
         try:
             return self.collection_orchestrator.collect_initial()
 
@@ -74,16 +70,21 @@ class CollectorManager:
     # --------------------------------------------------
 
     def _get_test_definition(self, test_id):
+        """Retrieve execution metadata from LoadedCatalogues."""
 
-        if not isinstance(self.catalogue, dict):
-            return None
+        metadata = getattr(self.catalogue, "test_metadata", None)
 
-        tests = self.catalogue.get("tests", {})
+        if isinstance(metadata, dict):
+            return metadata.get(test_id)
 
-        if not isinstance(tests, dict):
-            return None
+        # Backward compatibility with the old dictionary interface
+        if isinstance(self.catalogue, dict):
+            tests = self.catalogue.get("tests", {})
 
-        return tests.get(test_id)
+            if isinstance(tests, dict):
+                return tests.get(test_id)
+
+        return None
 
     # --------------------------------------------------
     # TARGETED DIAGNOSTIC TEST
@@ -107,19 +108,27 @@ class CollectorManager:
                 error="Target must be a dictionary"
             )
 
-        # 1. Resolve test definition
-        test_definition = self._get_test_definition(test_id)
-
-        if test_definition is None:
+        # Phase 1: research mode does not authorize live execution.
+        if getattr(self.catalogue, "research_mode", False):
             return self._result(
                 test_id,
                 "unavailable",
-                error="Test not found in catalogue"
+                error="Live diagnostic execution is disabled in Phase 1"
+            )
+
+        # 1. Resolve test metadata
+        test_metadata = self._get_test_definition(test_id)
+
+        if test_metadata is None:
+            return self._result(
+                test_id,
+                "unavailable",
+                error="Test not found in catalogue metadata"
             )
 
         # 2. Read execution configuration
-        execution = test_definition.get("execution") or {}
-        availability = test_definition.get("availability") or {}
+        execution = test_metadata.get("execution") or {}
+        availability = test_metadata.get("availability") or {}
 
         if not isinstance(execution, dict):
             execution = {}
@@ -127,27 +136,10 @@ class CollectorManager:
         if not isinstance(availability, dict):
             availability = {}
 
-        # Support both nested and root-level catalogue fields.
-        # This does not bypass any execution restrictions.
-        binding_status = execution.get(
-            "binding_status",
-            test_definition.get("binding_status")
-        )
-
-        live_binding = execution.get(
-            "live_binding",
-            test_definition.get("live_binding")
-        )
-
-        operation = execution.get(
-            "logical_operation",
-            test_definition.get(
-                "op",
-                test_definition.get("logical_operation")
-            )
-        )
-
-        provider = test_definition.get("provider")
+        binding_status = execution.get("binding_status")
+        live_binding = execution.get("live_binding")
+        operation = execution.get("logical_operation")
+        provider = test_metadata.get("provider")
 
         # 3. Enforce live execution policy
         if availability.get("live") is not True:
@@ -181,13 +173,24 @@ class CollectorManager:
 
         provider = provider.strip().lower()
 
-        # 5. Dispatch
+        # 5. Build an effective target without modifying the caller's target.
+        effective_target = dict(target)
+
+        target_selector = test_metadata.get("target_selector")
+
+        if isinstance(target_selector, dict):
+            effective_target.setdefault(
+                "target_selector",
+                target_selector
+            )
+
+        # 6. Dispatch
         try:
             if provider == "docker":
                 return self._execute_docker_test(
                     test_id,
                     operation,
-                    target
+                    effective_target
                 )
 
             return self._result(
@@ -252,68 +255,168 @@ class CollectorManager:
         return container_id or None
 
     # --------------------------------------------------
+    # COMPOSE SERVICE RESOLUTION
+    # --------------------------------------------------
+
+    def _get_compose_service(self, target):
+        """
+        Extract the Docker Compose service from the diagnostic target.
+
+        Supported target formats:
+        - {"component": "redis"}
+        - {"service": "redis"}
+        - {"target_selector": {"component": "redis"}}
+        """
+
+        selector = target.get("target_selector") or {}
+
+        if not isinstance(selector, dict):
+            selector = {}
+
+        component = (
+            target.get("component")
+            or target.get("service")
+            or selector.get("component")
+        )
+
+        if not isinstance(component, str):
+            return None
+
+        component = component.strip()
+
+        if not component:
+            return None
+
+        # The Compose service is named "db" in lab/compose.yaml.
+        aliases = {
+            "postgres": "db"
+        }
+
+        return aliases.get(component, component)
+
+    # --------------------------------------------------
+    # CONTAINER RESOLUTION
+    # --------------------------------------------------
+
+    def _resolve_container(self, target):
+        """
+        Resolve a container using either:
+        - Explicit container ID/name.
+        - Docker Compose service label.
+        """
+
+        container_id = self._get_container_id(target)
+        compose_service = self._get_compose_service(target)
+
+        if container_id is None and compose_service is None:
+            return None, "Container identifier is required"
+
+        snapshot = self.collect_snapshot(target)
+
+        if not isinstance(snapshot, dict):
+            return None, "Invalid Docker snapshot"
+
+        errors = snapshot.get("errors") or {}
+
+        if isinstance(errors, dict):
+            if errors.get("docker"):
+                return None, errors["docker"]
+
+            if errors.get("collection"):
+                return None, errors["collection"]
+
+        containers = snapshot.get("docker")
+
+        if not isinstance(containers, list):
+            return None, "Docker snapshot is unavailable"
+
+        matching = []
+
+        for container in containers:
+
+            if not isinstance(container, dict):
+                continue
+
+            container_id_value = container.get("id", "")
+            container_name = container.get("name", "")
+            service_name = container.get("compose_service")
+
+            if container_id is not None:
+                matches = (
+                    container_id_value == container_id
+                    or container_name == container_id
+                    or (
+                        isinstance(container_id_value, str)
+                        and container_id_value.startswith(container_id)
+                    )
+                )
+            else:
+                matches = service_name == compose_service
+
+            if matches:
+                matching.append(container)
+
+        if not matching:
+            identifier = container_id or compose_service
+
+            return None, f"Container not found: {identifier}"
+
+        if len(matching) > 1:
+            identifier = container_id or compose_service
+
+            return None, f"Multiple containers match: {identifier}"
+
+        return matching[0], None
+
+    # --------------------------------------------------
+    # RESOLUTION ERROR STATUS
+    # --------------------------------------------------
+
+    def _get_resolution_error_status(self, error):
+        """
+        Collection errors are failures.
+        Missing or ambiguous containers are unavailable results.
+        """
+
+        if error in (
+            "Docker snapshot is unavailable",
+            "Invalid Docker snapshot"
+        ):
+            return "failed"
+
+        # Errors returned by Docker/CollectionOrchestrator
+        # are strings here, unlike the previous dictionary behavior.
+        if error and error not in (
+            "Container identifier is required",
+        ) and not str(error).startswith(
+            (
+                "Container not found:",
+                "Multiple containers match:"
+            )
+        ):
+            return "failed"
+
+        return "unavailable"
+
+    # --------------------------------------------------
     # CONTAINER RUNTIME STATE
     # --------------------------------------------------
 
     def _execute_runtime_state(self, test_id, target):
 
-        container_id = self._get_container_id(target)
+        container, error = self._resolve_container(target)
 
-        if container_id is None:
+        if container is None:
             return self._result(
                 test_id,
-                "unavailable",
-                error="Container identifier is required"
-            )
-
-        # Reuse the initial collection pipeline.
-        snapshot = self.collect_snapshot(target)
-
-        errors = snapshot.get("errors", {})
-
-        if errors.get("docker"):
-            return self._result(
-                test_id,
-                "failed",
-                error=errors["docker"]
-            )
-
-        containers = snapshot.get("docker")
-
-        if containers is None:
-            return self._result(
-                test_id,
-                "failed",
-                error="Docker snapshot is unavailable"
-            )
-
-        matching = []
-
-        for container in containers:
-            container_id_value = container.get("id", "")
-            container_name = container.get("name", "")
-
-            if (
-                container_id_value == container_id
-                or container_name == container_id
-                or (
-                    isinstance(container_id_value, str)
-                    and container_id_value.startswith(container_id)
-                )
-            ):
-                matching.append(container)
-
-        if not matching:
-            return self._result(
-                test_id,
-                "unavailable",
-                error=f"Container not found: {container_id}"
+                self._get_resolution_error_status(error),
+                error=error
             )
 
         return self._result(
             test_id,
             "completed",
-            data=matching[0]
+            data=container
         )
 
     # --------------------------------------------------
@@ -322,22 +425,28 @@ class CollectorManager:
 
     def _execute_restart_history(self, test_id, target):
 
-        container_id = self._get_container_id(target)
+        container, error = self._resolve_container(target)
 
-        if container_id is None:
+        if container is None:
+            return self._result(
+                test_id,
+                self._get_resolution_error_status(error),
+                error=error
+            )
+
+        container_id = container.get("id") or container.get("name")
+
+        if not container_id:
             return self._result(
                 test_id,
                 "unavailable",
-                error="Container identifier is required"
+                error="Resolved container has no identifier"
             )
 
         result = self.collection_orchestrator.collect_on_demand(
             "events",
             container_id=container_id,
-            lookback_seconds=target.get(
-                "lookback_seconds",
-                60
-            ),
+            lookback_seconds=target.get("lookback_seconds", 60),
             event_actions=["die", "start"]
         )
 
@@ -352,13 +461,22 @@ class CollectorManager:
 
     def _execute_worker_logs(self, test_id, target):
 
-        container_id = self._get_container_id(target)
+        container, error = self._resolve_container(target)
 
-        if container_id is None:
+        if container is None:
+            return self._result(
+                test_id,
+                self._get_resolution_error_status(error),
+                error=error
+            )
+
+        container_id = container.get("id") or container.get("name")
+
+        if not container_id:
             return self._result(
                 test_id,
                 "unavailable",
-                error="Container identifier is required"
+                error="Resolved container has no identifier"
             )
 
         result = self.collection_orchestrator.collect_on_demand(
@@ -409,10 +527,7 @@ class CollectorManager:
             return self._result(
                 test_id,
                 "failed",
-                error=data.get(
-                    "error",
-                    "Collection failed"
-                ),
+                error=data.get("error", "Collection failed"),
                 data=data
             )
 

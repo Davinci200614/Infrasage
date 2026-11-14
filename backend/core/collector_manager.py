@@ -1,0 +1,406 @@
+"""CollectorManager from teammate commit 838ab10, hardened for Phase 2A."""
+from copy import deepcopy
+from datetime import datetime, timezone
+import math
+from backend.collectors.docker import DockerCollector, valid_container_id, valid_container_name
+from backend.diagnosis.catalogue_loader import LoadedCatalogues
+
+from backend.core.collection_orchestrator import CollectionOrchestrator
+
+
+class CollectorManager:
+    """
+    Interface between the diagnostic system and infrastructure collectors.
+
+    Responsibilities:
+    - Collect the initial infrastructure snapshot.
+    - Resolve diagnostic tests from the catalogue.
+    - Enforce live execution permissions.
+    - Dispatch supported operations to CollectionOrchestrator.
+    - Return raw execution results.
+
+    It does not:
+    - Select the next diagnostic test.
+    - Interpret diagnostic outcomes.
+    - Calculate Bayesian probabilities.
+    - Update beliefs.
+    """
+
+    def __init__(self, catalogue, collection_orchestrator=None, *, docker_collector=None):
+        # Adapt the Phase 1 loader without changing its API or its documents.
+        self.catalogue = catalogue
+        self.collection_orchestrator = collection_orchestrator
+        self.docker_collector = docker_collector
+        self._owns_docker = False
+        self._verified_definitions = {}
+
+    # --------------------------------------------------
+    # INITIAL SNAPSHOT
+    # --------------------------------------------------
+
+    def collect_snapshot(self, target=None):
+        try:
+            if self.collection_orchestrator is None:
+                self.collection_orchestrator = CollectionOrchestrator()
+            return self.collection_orchestrator.collect_initial()
+        except Exception as error:
+            return {"netdata": None, "docker": None, "errors": {"collection": str(error)}}
+
+    # --------------------------------------------------
+    # TEST IDENTIFIER
+    # --------------------------------------------------
+
+    def _get_test_id(self, test):
+
+        if isinstance(test, str):
+            return test
+
+        if isinstance(test, dict):
+            return test.get("identifier") or test.get("id")
+
+        if hasattr(test, "identifier"):
+            return test.identifier
+
+        return None
+
+    # --------------------------------------------------
+    # CATALOGUE RESOLUTION
+    # --------------------------------------------------
+
+    def _get_test_definition(self, test_id):
+        if test_id in self._verified_definitions:
+            return self._verified_definitions[test_id]
+        if isinstance(self.catalogue, LoadedCatalogues):
+            return self.catalogue.test_metadata.get(test_id)
+        if isinstance(self.catalogue, dict) and isinstance(self.catalogue.get("tests"), dict):
+            return self.catalogue["tests"].get(test_id)
+        return None
+
+    # --------------------------------------------------
+    # TARGETED DIAGNOSTIC TEST
+    # --------------------------------------------------
+
+    def execute_test(self, test, target):
+        test_id = self._get_test_id(test)
+        if not isinstance(test_id, str) or not test_id.strip():
+            return self._result(test_id, "unavailable", error="Invalid test identifier")
+        definition = self._get_test_definition(test_id)
+        if not isinstance(definition, dict):
+            return self._result(test_id, "unavailable", error="Test not found or malformed catalogue definition")
+        execution = definition.get("execution")
+        availability = definition.get("availability")
+        if not isinstance(execution, dict) or not isinstance(availability, dict):
+            return self._result(test_id, "unavailable", error="Malformed execution metadata")
+        if availability.get("live") is not True:
+            return self._result(test_id, "unavailable", error="Live execution is disabled for this test")
+        if execution.get("binding_status") != "verified":
+            return self._result(test_id, "unavailable", error="Test binding has not been verified")
+        binding = execution.get("live_binding")
+        if not self._valid_binding(binding):
+            return self._result(test_id, "unavailable", error="Malformed or missing verified live binding")
+        # Other teammate routes remain in the source but are not enabled in Phase 2A.
+        if (definition.get("provider") != "docker"
+                or execution.get("logical_operation") != "container_process_state"
+                or test_id != "redis_runtime_state"):
+            return self._result(test_id, "unavailable", error="Unsupported provider, test or operation")
+        if not self._target_matches(target, binding):
+            return self._result(test_id, "unavailable", error="Missing, ambiguous or mismatched target identity")
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(binding["verified_at"])).total_seconds()
+        if age < 0 or age > binding["freshness_max_seconds"]:
+            return self._result(test_id, "unavailable", error="Runtime binding verification expired; verify again")
+        try:
+            result = self._execute_docker_test(test_id, execution["logical_operation"], target)
+            if result.get("status") == "completed":
+                actual = result.get("target", {})
+                if (actual.get("container_id") != binding["container_id"]
+                        or actual.get("container_name") != binding["container_name"]
+                        or result.get("docker_endpoint") != binding["docker_endpoint"]):
+                    return {**result, "status": "failed", "binding": deepcopy(binding),
+                            "error": "Docker identity changed since binding verification"}
+            result["binding"] = deepcopy(binding)
+            return result
+        except Exception as error:
+            return self._result(test_id, "failed", error=str(error))
+
+    # --------------------------------------------------
+    # DOCKER OPERATIONS
+    # --------------------------------------------------
+
+    def _execute_docker_test(self, test_id, operation, target):
+
+        if operation == "container_process_state":
+            return self._execute_runtime_state(
+                test_id,
+                target
+            )
+
+        if operation == "container_restart_history":
+            return self._execute_restart_history(
+                test_id,
+                target
+            )
+
+        if operation == "read_bounded_worker_logs":
+            return self._execute_worker_logs(
+                test_id,
+                target
+            )
+
+        return self._result(
+            test_id,
+            "unavailable",
+            error=f"Unsupported Docker operation: {operation}"
+        )
+
+    # --------------------------------------------------
+    # CONTAINER IDENTIFIER
+    # --------------------------------------------------
+
+    def _get_container_id(self, target):
+
+        container_id = (
+            target.get("container_id")
+            or target.get("container_name")
+        )
+
+        if not isinstance(container_id, str):
+            return None
+
+        container_id = container_id.strip()
+
+        return container_id or None
+
+    # --------------------------------------------------
+    # CONTAINER RUNTIME STATE
+    # --------------------------------------------------
+
+    def _execute_runtime_state(self, test_id, target):
+        # Targeted inspect only: no Netdata requests, stats or whole-host snapshot.
+        result = self._docker().inspect_runtime(
+            container_id=target.get("container_id"), container_name=target.get("container_name"))
+        return {**result, "test_id": test_id}
+
+    # --------------------------------------------------
+    # CONTAINER RESTART HISTORY
+    # --------------------------------------------------
+
+    def _execute_restart_history(self, test_id, target):
+
+        container_id = self._get_container_id(target)
+
+        if container_id is None:
+            return self._result(
+                test_id,
+                "unavailable",
+                error="Container identifier is required"
+            )
+
+        result = self.collection_orchestrator.collect_on_demand(
+            "events",
+            container_id=container_id,
+            lookback_seconds=target.get(
+                "lookback_seconds",
+                60
+            ),
+            event_actions=["die", "start"]
+        )
+
+        return self._convert_collection_result(
+            test_id,
+            result
+        )
+
+    # --------------------------------------------------
+    # WORKER LOG INSPECTION
+    # --------------------------------------------------
+
+    def _execute_worker_logs(self, test_id, target):
+
+        container_id = self._get_container_id(target)
+
+        if container_id is None:
+            return self._result(
+                test_id,
+                "unavailable",
+                error="Container identifier is required"
+            )
+
+        result = self.collection_orchestrator.collect_on_demand(
+            "logs",
+            container_id=container_id,
+            tail=target.get("tail", 100),
+            since=target.get("since"),
+            until=target.get("until")
+        )
+
+        return self._convert_collection_result(
+            test_id,
+            result
+        )
+
+    # --------------------------------------------------
+    # COLLECTION RESULT NORMALIZATION
+    # --------------------------------------------------
+
+    def _convert_collection_result(self, test_id, result):
+
+        if not isinstance(result, dict):
+            return self._result(
+                test_id,
+                "failed",
+                error="Invalid collection result"
+            )
+
+        errors = result.get("errors") or {}
+        data = result.get("data")
+
+        if errors:
+            return self._result(
+                test_id,
+                "failed",
+                error=errors,
+                data=data
+            )
+
+        if data is None:
+            return self._result(
+                test_id,
+                "failed",
+                error="Collection returned no data"
+            )
+
+        if isinstance(data, dict) and data.get("success") is False:
+            return self._result(
+                test_id,
+                "failed",
+                error=data.get(
+                    "error",
+                    "Collection failed"
+                ),
+                data=data
+            )
+
+        return self._result(
+            test_id,
+            "completed",
+            data=data
+        )
+
+    # --------------------------------------------------
+    # STANDARD RESULT
+    # --------------------------------------------------
+
+    def _result(self, test_id, status, data=None, error=None):
+
+        result = {
+            "test_id": test_id,
+            "status": status,
+            "data": data
+        }
+
+        if error is not None:
+            result["error"] = error
+
+        return result
+
+    def _docker(self):
+        if self.docker_collector is None:
+            if self.collection_orchestrator is not None:
+                self.docker_collector = self.collection_orchestrator.docker_collector
+            else:
+                self.docker_collector = DockerCollector()
+                self._owns_docker = True
+        return self.docker_collector
+
+
+    @staticmethod
+    def _valid_binding(binding):
+        if not isinstance(binding, dict):
+            return False
+        if (binding.get("provider") != "docker" or binding.get("operation") != "container_process_state"
+                or not valid_container_id(binding.get("container_id"))
+                or not valid_container_name(binding.get("container_name"))
+                or not isinstance(binding.get("docker_endpoint"), str) or not binding["docker_endpoint"]):
+            return False
+        limit = binding.get("freshness_max_seconds")
+        if isinstance(limit, bool) or not isinstance(limit, (int, float)) or not 0 < limit <= 15:
+            return False
+        if not math.isfinite(limit):
+            return False
+        try:
+            stamp = datetime.fromisoformat(binding["verified_at"])
+            return stamp.tzinfo is not None and stamp.utcoffset() is not None
+        except (KeyError, TypeError, ValueError):
+            return False
+
+
+    @staticmethod
+    def _target_matches(target, identity):
+        if not isinstance(target, dict):
+            return False
+        cid, name = target.get("container_id"), target.get("container_name")
+        if cid is None and name is None:
+            return False
+        return ((cid is None or (valid_container_id(cid) and cid == identity.get("container_id")))
+                and (name is None or (valid_container_name(name) and name == identity.get("container_name"))))
+
+
+    def verify_runtime_binding(self, test, target):
+        """Read-only inspect and activate one process-local research binding.
+
+        No catalogue file is changed. Verification itself never samples a fault
+        outcome or updates beliefs. The following execution performs a new inspect.
+        """
+        test_id = self._get_test_id(test)
+        if not isinstance(test_id, str) or not test_id.strip():
+            return self._result(None, "unavailable", error="Invalid test identifier")
+        if not isinstance(self.catalogue, LoadedCatalogues) or not self.catalogue.research_mode:
+            return self._result(test_id, "unavailable", error="Verification requires explicit loaded research catalogues")
+        self._verified_definitions.pop(test_id, None)
+        original = self.catalogue.test_metadata.get(test_id)
+        if (test_id != "redis_runtime_state" or not isinstance(original, dict)
+                or not isinstance(original.get("execution"), dict)
+                or not isinstance(original.get("availability"), dict)
+                or original["execution"].get("logical_operation") != "container_process_state"
+                or original["availability"].get("simulation") is not True):
+            return self._result(test_id, "unavailable", error="Only the Redis runtime operation can be verified in Phase 2A")
+        if not isinstance(target, dict) or not any(target.get(k) for k in ("container_id", "container_name")):
+            return self._result(test_id, "unavailable", error="Explicit Docker target required")
+        try:
+            result = self._execute_runtime_state(test_id, target)
+            if result.get("status") != "completed":
+                return result
+            identity = result.get("target", {})
+            if not self._target_matches(target, identity):
+                return self._result(test_id, "failed", error="Provider target identity mismatch")
+            if result.get("data", {}).get("status") not in ("running", "exited", "restarting"):
+                return self._result(test_id, "unavailable", error="Docker state has no validated runtime outcome mapping")
+            binding = {"provider": "docker", "operation": "container_process_state",
+                       **identity, "verified_at": result.get("observed_at"),
+                       "docker_endpoint": result.get("docker_endpoint"), "freshness_max_seconds": 15}
+            if not self._valid_binding(binding):
+                return self._result(test_id, "failed", error="Provider returned malformed binding evidence")
+            age = (datetime.now(timezone.utc) - datetime.fromisoformat(binding["verified_at"])).total_seconds()
+            if age < 0 or age > binding["freshness_max_seconds"]:
+                return {**result, "status": "unavailable", "error": "Stale or future binding evidence"}
+            if (result.get("source") != "docker" or result.get("error") or result.get("errors")
+                    or result["data"].get("id") != identity.get("container_id")
+                    or result["data"].get("name") != identity.get("container_name")
+                    or result.get("target_identifier") != "docker:" + identity["container_id"]):
+                return {**result, "status": "failed", "error": "Inconsistent provider binding evidence"}
+            definition = deepcopy(original)
+            definition["provider"] = "docker"
+            definition["availability"]["live"] = True
+            definition["execution"].update(binding_status="verified", live_binding=binding)
+            self._verified_definitions[test_id] = definition
+            return {**result, "binding": deepcopy(binding), "verification_scope": "process-local research only"}
+        except Exception as error:
+            return self._result(test_id, "failed", error=str(error))
+
+
+    def close(self):
+        if self._owns_docker and self.docker_collector is not None:
+            self.docker_collector.client.close()
+            self.docker_collector = None
+            self._owns_docker = False
+

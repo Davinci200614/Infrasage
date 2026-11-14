@@ -1,0 +1,38 @@
+name: Twin Tests
+
+on:
+  push:
+    branches: [feat/twin-phase-2]
+  pull_request:
+    branches: [feat/twin-phase-2]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:24-dind
+        options: --privileged
+        ports: ["2375:2375"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python venv
+        run: |
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Start lab stack
+        run: |
+          sg docker -c 'docker compose -p infrasage-lab -f lab/compose.yaml -f lab/docker-compose.infrasage.yml up -d --wait'
+          # Wait for all services to be healthy
+          sleep 60
+
+      - name: Run twin tests
+        run: |
+          .venv/bin/python -m pytest backend/twin/tests -q
+
+      - name: Tear down lab stack
+        run: |
+          sg docker -c 'docker compose -p infrasage-lab -f lab/compose.yaml -f lab/docker-compose.infrasage.yml down -v'

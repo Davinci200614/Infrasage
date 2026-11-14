@@ -421,9 +421,9 @@ class CollectorManager:
             self._owns_docker = False
 
 
-    def _execute_connectivity(self, test_id, target, config):
+    def _execute_connectivity(self, test_id, target, config, *, deadline_at=None):
         start = time.monotonic()
-        deadline = start + config['execution_deadline']
+        deadline = min(start + config['execution_deadline'], deadline_at) if deadline_at is not None else start + config['execution_deadline']
         try:
             # Bound initial Docker version negotiation as well as probe requests.
             provider = self._docker(timeout=min(2, config['execution_deadline']))
@@ -456,7 +456,8 @@ class CollectorManager:
                 and payload.get('observed_at') == result.get('observed_at'))
 
     def verify_connectivity_binding(self, test, target, *, redis_host, redis_port,
-                                    connection_timeout=1.0, execution_deadline=8.0, helper_image):
+                                    connection_timeout=1.0, execution_deadline=8.0, helper_image,
+                                    _deadline_at=None):
         """Verify the fixed helper operation before enabling a scoped lab binding.
 
         Verification is itself a real TCP probe; execution performs another probe.
@@ -479,7 +480,7 @@ class CollectorManager:
         if (not valid_probe_config(config) or not self._target_matches(target, target)
                 or any(key in target and target[key] != config[key] for key in CONFIG_KEYS)):
             return self._result(test_id, 'unavailable', error='Invalid explicit worker, Redis endpoint or probe configuration')
-        result = self._execute_connectivity(test_id, target, config)
+        result = self._execute_connectivity(test_id, target, config, deadline_at=_deadline_at)
         if result.get('status') != 'completed':
             return result
         identity = result.get('target', {})
@@ -502,3 +503,74 @@ class CollectorManager:
         definition['execution'].update(binding_status='verified', live_binding=binding)
         self._verified_definitions[test_id] = definition
         return {**result, 'binding': deepcopy(binding), 'verification_scope': 'process-local research only'}
+
+    def check_test_capability(self, test, target, *, probe_config=None, deadline_seconds=None):
+        """Pure configuration/pathway check, NOT live verification or diagnostic I/O."""
+        test_id = self._get_test_id(test)
+        operations = {'redis_runtime_state': 'container_process_state',
+                      'worker_redis_connectivity': 'worker_to_redis_tcp'}
+        def answer(eligible, reason):
+            return {'eligible': eligible, 'reason': reason, 'verification_performed': False}
+        if (not isinstance(test_id, str) or test_id not in operations or not isinstance(self.catalogue, LoadedCatalogues)
+                or not self.catalogue.research_mode):
+            return answer(False, 'unsupported test or missing research catalogues')
+        definition = self.catalogue.test_metadata.get(test_id)
+        if (not isinstance(definition, dict) or not isinstance(definition.get('execution'), dict)
+                or definition['execution'].get('logical_operation') != operations[test_id]
+                or not isinstance(definition.get('availability'), dict)
+                or definition['availability'].get('simulation') is not True):
+            return answer(False, 'unsupported catalogue execution configuration')
+        if not self._target_matches(target, target):
+            return answer(False, 'missing or invalid explicit target')
+        if test_id == 'worker_redis_connectivity' and not valid_probe_config(probe_config):
+            return answer(False, 'missing or invalid worker endpoint/helper/budgets')
+        if test_id == 'worker_redis_connectivity' and any(
+                key in target and target[key] != probe_config[key] for key in CONFIG_KEYS):
+            return answer(False, 'explicit target conflicts with configured probe endpoint/budgets')
+        if (isinstance(deadline_seconds, bool) or not isinstance(deadline_seconds, (int, float))
+                or not math.isfinite(deadline_seconds) or deadline_seconds <= 0):
+            return answer(False, 'no valid execution deadline')
+        if test_id == 'worker_redis_connectivity' and deadline_seconds < probe_config['execution_deadline']:
+            return answer(False, 'insufficient deadline for configured worker probe')
+        return answer(True, 'configured pathway; live verification deferred until selection')
+
+    def execute_investigation_test(self, test, target, *, probe_config=None, deadline_seconds):
+        """One selected diagnostic action. Verification evidence IS its result.
+
+        Never follow verification with execute_test(): that would repeat the action.
+        Existing standalone verification/execution APIs remain unchanged.
+        """
+        test_id = self._get_test_id(test)
+        capability = self.check_test_capability(test, target, probe_config=probe_config,
+                                                deadline_seconds=deadline_seconds)
+        if not capability['eligible']:
+            return {**self._result(test_id, 'unavailable', error=capability['reason']),
+                    'diagnostic_actions': 0, 'action_phase': 'configuration_rejected'}
+        start = time.monotonic()
+        deadline_at = start + deadline_seconds
+        provider = None
+        previous_timeout = None
+        try:
+            provider = self._docker(timeout=min(2, deadline_seconds))
+            previous_timeout = provider.client.api.timeout
+            remaining = deadline_at - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError('Diagnostic execution deadline exhausted before verification')
+            provider.client.api.timeout = remaining
+            if test_id == 'redis_runtime_state':
+                result = self.verify_runtime_binding(test, target)
+            else:
+                result = self.verify_connectivity_binding(test, target, **probe_config,
+                                                          _deadline_at=deadline_at)
+            if time.monotonic() > deadline_at:
+                self._verified_definitions.pop(test_id, None)
+                result = {**result, 'status': 'failed', 'error': 'Selected diagnostic exceeded its execution deadline'}
+            return {**result, 'diagnostic_actions': 1, 'action_phase': 'binding_verification_with_evidence',
+                    'evidence_from_verification': True, 'action_duration_seconds': time.monotonic() - start}
+        except Exception as error:
+            self._verified_definitions.pop(test_id, None)
+            return {**self._result(test_id, 'failed', error=str(error)), 'diagnostic_actions': 1,
+                    'action_phase': 'verification_failed', 'action_duration_seconds': time.monotonic() - start}
+        finally:
+            if provider is not None and previous_timeout is not None:
+                provider.client.api.timeout = previous_timeout

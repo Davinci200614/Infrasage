@@ -314,6 +314,24 @@ tests:
       live: false
       reason: Provider capability/binding not validated against installed agent or collector
     freshness_max_seconds: 15
+    normalization:
+      status: provisional_research_thresholds_not_calibrated
+      metric: netdata.system.cpu.activity_percent
+      units: percentage
+      dimensions: [user, system, nice, irq, softirq, steal, guest, guest_nice]
+      definition: >-
+        Sum these disjoint Linux Netdata system.cpu chart percentages, excluding
+        iowait and idle. Netdata proc.plugin subtracts guest/guest_nice from
+        user/nice before charting; do not apply this formula to raw /proc/stat.
+      semantics_source: https://github.com/netdata/netdata/blob/master/src/collectors/proc.plugin/proc_stat.c
+      requested_window:
+        after_seconds: -5
+        points: 1
+        group: agent_default
+      window_limitation: Collector does not retain actual window bounds or grouping metadata
+      thresholds:
+        high_min_percent: 70
+        critical_min_percent: 90
     synthetic_cost_for_planner_simulation:
       energy_j: 0.02
       latency_ms: 45

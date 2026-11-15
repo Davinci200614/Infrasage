@@ -1,0 +1,441 @@
+schema_version: 1
+catalogue_id: voting-app-bootstrap
+version: 0.1.0
+status: candidate_unreviewed
+scope:
+  application: docker-example-voting-app
+  deployment: docker_compose
+  single_primary_fault_assumption: true
+  contexts:
+  - vote
+  - redis
+  - worker
+  - db
+  - result
+  - host
+notes:
+- Root causes are candidates, not alert names.
+- Qualitative support/contradiction is not a Bayesian likelihood.
+- Multiple simultaneous faults and unknown causes require abstention or a richer model.
+- The selected metrics are candidates based on open-source documentation and topology, not a verified live Netdata
+  inventory.
+sources:
+  voting_app: https://github.com/dockersamples/example-voting-app
+  netdata: https://learn.netdata.cloud/docs/live-view
+  prometheus_alerts: https://github.com/samber/awesome-prometheus-alerts
+  prometheus_rules: https://github.com/samber/awesome-prometheus-alerts/blob/master/_data/rules.yml
+hypotheses:
+  redis_process_stopped:
+    component: redis
+    description: Redis container or service stopped
+    category: docker_runtime
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  redis_service_degraded:
+    component: redis
+    description: Redis running but degraded/unresponsive
+    category: service_health
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  worker_process_stopped:
+    component: worker
+    description: Vote worker process/container stopped
+    category: docker_runtime
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  postgres_process_stopped:
+    component: db
+    description: PostgreSQL container or service stopped
+    category: docker_runtime
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  postgres_connection_saturation:
+    component: db
+    description: Database connections exhausted or heavily saturated
+    category: database
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  worker_redis_network_failure:
+    component: network
+    description: Worker cannot reach Redis despite Redis running
+    category: network
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  worker_postgres_network_failure:
+    component: network
+    description: Worker cannot reach PostgreSQL despite DB running
+    category: network
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  worker_redis_endpoint_wrong:
+    component: configuration
+    description: Worker configured with incorrect Redis endpoint
+    category: configuration
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  worker_postgres_endpoint_wrong:
+    component: configuration
+    description: Worker configured with incorrect DB endpoint
+    category: configuration
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  host_cpu_saturation:
+    component: host
+    description: Host CPU contention significantly affects services
+    category: host_resource
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  host_memory_pressure:
+    component: host
+    description: Host memory exhaustion/pressure affects services
+    category: host_resource
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  host_disk_pressure:
+    component: host
+    description: Host disk capacity or I/O pressure affects services
+    category: host_resource
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  vote_frontend_unavailable:
+    component: vote
+    description: Vote frontend unavailable independent of downstream services
+    category: frontend
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  result_frontend_unavailable:
+    component: result
+    description: Result frontend unavailable independent of downstream services
+    category: frontend
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - voting_app_topology
+    - netdata_observability_patterns
+    - prometheus_alert_taxonomy
+  other_unknown:
+    component: other
+    description: Unmodeled, multiple or otherwise unknown cause
+    category: open_world
+    environments:
+    - docker_compose
+    review_status: proposed_unvalidated
+    source_basis:
+    - open_world_modeling_assumption
+relationships:
+- test_id: redis_runtime_state
+  hypothesis_outcomes:
+    redis_process_stopped:
+      supports: stopped
+      contradicts: running
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: redis_service_health
+  hypothesis_outcomes:
+    redis_process_stopped:
+      supports: unreachable
+      contradicts: healthy
+    redis_service_degraded:
+      supports: degraded
+      contradicts: healthy
+    host_cpu_saturation:
+      supports: degraded
+      contradicts: healthy
+    host_memory_pressure:
+      supports: degraded
+      contradicts: healthy
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: worker_runtime_state
+  hypothesis_outcomes:
+    worker_process_stopped:
+      supports: stopped
+      contradicts: running
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: postgres_runtime_state
+  hypothesis_outcomes:
+    postgres_process_stopped:
+      supports: stopped
+      contradicts: running
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: postgres_service_health
+  hypothesis_outcomes:
+    postgres_process_stopped:
+      supports: unreachable
+      contradicts: healthy
+    postgres_connection_saturation:
+      supports: degraded
+      contradicts: healthy
+    host_cpu_saturation:
+      supports: degraded
+      contradicts: healthy
+    host_memory_pressure:
+      supports: degraded
+      contradicts: healthy
+    host_disk_pressure:
+      supports: degraded
+      contradicts: healthy
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: worker_redis_connectivity
+  hypothesis_outcomes:
+    redis_process_stopped:
+      supports: refused
+      contradicts: connected
+    redis_service_degraded:
+      supports: timeout
+      contradicts: connected
+    worker_redis_network_failure:
+      supports: timeout
+      contradicts: connected
+    worker_redis_endpoint_wrong:
+      supports: refused
+      contradicts: connected
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: worker_postgres_connectivity
+  hypothesis_outcomes:
+    postgres_process_stopped:
+      supports: refused
+      contradicts: connected
+    postgres_connection_saturation:
+      supports: timeout
+      contradicts: connected
+    worker_postgres_network_failure:
+      supports: timeout
+      contradicts: connected
+    worker_postgres_endpoint_wrong:
+      supports: refused
+      contradicts: connected
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: worker_redis_endpoint
+  hypothesis_outcomes:
+    worker_redis_endpoint_wrong:
+      supports: incorrect
+      contradicts: correct
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: worker_postgres_endpoint
+  hypothesis_outcomes:
+    worker_postgres_endpoint_wrong:
+      supports: incorrect
+      contradicts: correct
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: host_cpu_pressure
+  hypothesis_outcomes:
+    host_cpu_saturation:
+      supports: critical
+      contradicts: normal
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: host_memory_pressure
+  hypothesis_outcomes:
+    host_memory_pressure:
+      supports: critical
+      contradicts: normal
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: host_disk_pressure
+  hypothesis_outcomes:
+    host_disk_pressure:
+      supports: critical
+      contradicts: normal
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: vote_http_check
+  hypothesis_outcomes:
+    host_cpu_saturation:
+      supports: error
+      contradicts: healthy
+    vote_frontend_unavailable:
+      supports: unreachable
+      contradicts: healthy
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: result_http_check
+  hypothesis_outcomes:
+    postgres_process_stopped:
+      supports: error
+      contradicts: healthy
+    host_cpu_saturation:
+      supports: error
+      contradicts: healthy
+    result_frontend_unavailable:
+      supports: unreachable
+      contradicts: healthy
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: vote_to_redis_connectivity
+  hypothesis_outcomes:
+    redis_process_stopped:
+      supports: refused
+      contradicts: connected
+    redis_service_degraded:
+      supports: timeout
+      contradicts: connected
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: result_postgres_connectivity
+  hypothesis_outcomes:
+    postgres_process_stopped:
+      supports: refused
+      contradicts: connected
+    postgres_connection_saturation:
+      supports: timeout
+      contradicts: connected
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: worker_error_signature
+  hypothesis_outcomes:
+    redis_process_stopped:
+      supports: redis_error
+      contradicts: none
+    redis_service_degraded:
+      supports: redis_error
+      contradicts: none
+    postgres_process_stopped:
+      supports: postgres_error
+      contradicts: none
+    postgres_connection_saturation:
+      supports: postgres_error
+      contradicts: none
+    worker_redis_network_failure:
+      supports: redis_error
+      contradicts: none
+    worker_postgres_network_failure:
+      supports: postgres_error
+      contradicts: none
+    worker_redis_endpoint_wrong:
+      supports: redis_error
+      contradicts: none
+    worker_postgres_endpoint_wrong:
+      supports: postgres_error
+      contradicts: none
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: postgres_connection_saturation
+  hypothesis_outcomes:
+    postgres_connection_saturation:
+      supports: exhausted
+      contradicts: normal
+    host_disk_pressure:
+      supports: high
+      contradicts: normal
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection
+- test_id: voting_e2e_consistency
+  hypothesis_outcomes:
+    redis_process_stopped:
+      supports: delayed
+      contradicts: consistent
+    redis_service_degraded:
+      supports: delayed
+      contradicts: consistent
+    worker_process_stopped:
+      supports: delayed
+      contradicts: consistent
+    postgres_process_stopped:
+      supports: delayed
+      contradicts: consistent
+    postgres_connection_saturation:
+      supports: delayed
+      contradicts: consistent
+    worker_redis_network_failure:
+      supports: delayed
+      contradicts: consistent
+    worker_postgres_network_failure:
+      supports: delayed
+      contradicts: consistent
+    worker_redis_endpoint_wrong:
+      supports: delayed
+      contradicts: consistent
+    worker_postgres_endpoint_wrong:
+      supports: delayed
+      contradicts: consistent
+    host_cpu_saturation:
+      supports: delayed
+      contradicts: consistent
+    host_memory_pressure:
+      supports: delayed
+      contradicts: consistent
+    host_disk_pressure:
+      supports: delayed
+      contradicts: consistent
+    vote_frontend_unavailable:
+      supports: inconsistent
+      contradicts: consistent
+    result_frontend_unavailable:
+      supports: inconsistent
+      contradicts: consistent
+  review_status: proposed_unvalidated
+  basis: causal engineering assumption; verify by controlled fault injection

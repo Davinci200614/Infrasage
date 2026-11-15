@@ -1,0 +1,39 @@
+# Environment & secrets
+.env
+.env.local
+*.env
+
+# Experiment data (large, regenerated)
+experiments/runs/
+experiments/aggregates/
+experiments/ground_truth/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/

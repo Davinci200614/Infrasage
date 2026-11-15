@@ -40,7 +40,7 @@ ok "All tools present"
 # ── 1. Unit tests (fake Docker) ────────────────────────────────────────────
 step "Running unit tests (backend/twin/tests)"
 $VENV_PY -m pytest backend/twin/tests -q
-ok "26 tests passed"
+ok "32 tests passed"
 
 # ── 2. Start lab stack ─────────────────────────────────────────────────────
 step "Starting lab stack ($PROJECT)"
@@ -106,7 +106,8 @@ echo "  diagnosis:       $DECISION"
 
 [[ "$LAB_STATUS" == "valid" ]] || die "Experiment lab_status=$LAB_STATUS (expected valid)"
 [[ "$GT_LABEL" == "redis_process_stopped" ]] || die "Wrong ground truth label"
-[[ "$DECISION" == "stub_cause" ]] || die "Wrong stub decision"
+# Real diagnostic may abstain (no calibrated likelihoods yet)
+[[ "$DECISION" == "abstain" || "$DECISION" == "stub_cause" ]] || die "Unexpected decision: $DECISION"
 ok "Experiment completed successfully"
 
 # ── 6. Show run record ─────────────────────────────────────────────────────

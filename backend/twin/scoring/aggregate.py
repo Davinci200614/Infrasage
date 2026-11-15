@@ -6,8 +6,13 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from backend.diagnosis.catalogue_loader import load_catalogues
+
 RUNS_DIR = Path("experiments/runs")
 AGGREGATES_DIR = Path("experiments/aggregates")
+
+# Load catalogue once for full outcome space
+_CATALOGUE = load_catalogues(research_mode=True)
 
 
 def load_runs(split: str | None = None) -> list[dict]:
@@ -16,6 +21,9 @@ def load_runs(split: str | None = None) -> list[dict]:
     for path in RUNS_DIR.glob("*.json"):
         with open(path) as f:
             record = json.load(f)
+        # Skip validation runs (contaminate calibration)
+        if "validation" in record.get("run_id", ""):
+            continue
         if split is None or record.get("split") == split:
             runs.append(record)
     return runs
@@ -93,7 +101,8 @@ def compute_likelihood_tables(runs: list[dict]) -> dict:
         likelihoods[cause] = {}
         for test_id, outcomes in tests.items():
             total = totals[cause][test_id]
-            K = len(outcomes) if outcomes else 3
+            # Use full outcome space from catalogue, not just observed outcomes
+            K = len(_CATALOGUE.tests.get(test_id, {}).outcomes) if test_id in _CATALOGUE.tests else (len(outcomes) if outcomes else 3)
             likelihoods[cause][test_id] = {}
             for outcome, count in outcomes.items():
                 likelihoods[cause][test_id][outcome] = (count + alpha) / (total + K * alpha)

@@ -47,31 +47,45 @@ def run_all_validations() -> list[ValidationResult]:
     
     # 1. Reproducibility
     print("  1/7 Reproducibility...")
-    results.append(check_reproducibility())
+    r = check_reproducibility()
+    results.append(r)
+    _persist(r)
     
     # 2. Reset correctness
     print("  2/7 Reset correctness...")
-    results.append(check_reset_correctness())
+    r = check_reset_correctness()
+    results.append(r)
+    _persist(r)
     
     # 3. Injection verification
     print("  3/7 Injection verification...")
-    results.append(check_injection_verification())
+    r = check_injection_verification()
+    results.append(r)
+    _persist(r)
     
     # 4. Fault-symptom coupling
     print("  4/7 Fault-symptom coupling...")
-    results.append(check_fault_symptom_coupling())
+    r = check_fault_symptom_coupling()
+    results.append(r)
+    _persist(r)
     
     # 5. Isolation
     print("  5/7 Isolation...")
-    results.append(check_isolation())
+    r = check_isolation()
+    results.append(r)
+    _persist(r)
     
     # 6. Label separation (import guard)
     print("  6/7 Label separation...")
-    results.append(check_label_separation())
+    r = check_label_separation()
+    results.append(r)
+    _persist(r)
     
     # 7. Determinism of seeds
     print("  7/7 Determinism of seeds...")
-    results.append(check_seed_determinism())
+    r = check_seed_determinism()
+    results.append(r)
+    _persist(r)
     
     # Summary
     passed = sum(1 for r in results if r.passed)

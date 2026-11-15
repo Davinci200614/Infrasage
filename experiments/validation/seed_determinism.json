@@ -1,0 +1,25 @@
+{
+  "check": "seed_determinism",
+  "passed": true,
+  "details": {
+    "split_deterministic": true,
+    "splits": [
+      "evaluation",
+      "evaluation",
+      "evaluation",
+      "evaluation",
+      "evaluation",
+      "evaluation",
+      "evaluation",
+      "evaluation",
+      "evaluation",
+      "evaluation"
+    ],
+    "workload_deterministic": true,
+    "sample_voter_ids": [
+      "w12345-0",
+      "w12345-1"
+    ]
+  },
+  "timestamp": "2026-11-15T22:21:51.045712+00:00"
+}

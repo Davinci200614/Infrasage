@@ -9,12 +9,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import subprocess
+import sys
+import threading
+import time
 from collections.abc import Callable
+from pathlib import Path
 
 import yaml
 
-from backend.api.investigate import InvestigationResult, LabTarget, TestResult
+from backend.api.investigate import investigate as real_investigate, InvestigationResult, LabTarget, TestResult
 from backend.twin import LAB, ROOT, catalogues
+from backend.twin.energy_client import EnergyClient, BaselineEnergy
 from backend.twin.ground_truth import store
 from backend.twin.injector import injector
 from backend.twin.runner import lab
@@ -28,7 +35,55 @@ ENVIRONMENT = "voting-app-v0.1"
 TIMEOUTS = catalogues.load("workloads")["timeouts_seconds"]
 WORKLOAD = catalogues.load("workloads")["workload"]
 
-InvestigateFn = Callable[[LabTarget], InvestigationResult]
+InvestigateFn = Callable[[LabTarget, EnergyClient | None], InvestigationResult]
+
+_ENERGY_SERVER_PROC: subprocess.Popen | None = None
+_ENERGY_SERVER_THREAD: threading.Thread | None = None
+_PYTHON_EXE = os.environ.get("INFRASAGE_ENERGY_PYTHON", sys.executable)
+
+
+def _start_energy_server() -> EnergyClient:
+    """Start the energy measurement server as a background process."""
+    global _ENERGY_SERVER_PROC, _ENERGY_SERVER_THREAD
+    
+    server_script = Path(__file__).resolve().parents[2] / "energy" / "meter.py"
+    if not server_script.exists():
+        # Fallback to the twin's energy_server.py if energy/meter.py not found
+        server_script = Path(__file__).resolve().parents[1] / "energy_server.py"
+    
+    _ENERGY_SERVER_PROC = subprocess.Popen(
+        [_PYTHON_EXE, str(server_script)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    
+    # Wait for server to be ready
+    client = EnergyClient()
+    for _ in range(20):
+        time.sleep(0.25)
+        health = client.health_check()
+        if health.get("status") == "ok":
+            return client
+    
+    # Server didn't start properly
+    _stop_energy_server()
+    raise RuntimeError("Energy server failed to start")
+
+
+def _stop_energy_server() -> None:
+    """Stop the energy measurement server. Idempotent."""
+    global _ENERGY_SERVER_PROC, _ENERGY_SERVER_THREAD
+    if _ENERGY_SERVER_PROC:
+        proc = _ENERGY_SERVER_PROC
+        _ENERGY_SERVER_PROC = None
+        try:
+            proc.terminate()
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+        except Exception:
+            pass  # Process already gone
 
 
 class _RunError(Exception):
@@ -39,8 +94,8 @@ class _RunError(Exception):
         self.status = status
 
 
-def stub_investigate(target: LabTarget) -> InvestigationResult:
-    """Fixed-answer stub until phase 6 replaces it with the real entry point."""
+def stub_investigate(target: LabTarget, energy_client=None) -> InvestigationResult:
+    """Fixed-answer stub for tests; not used in production runs."""
     return InvestigationResult(
         decision="stub_cause",
         abstained=False,
@@ -56,9 +111,10 @@ def run(
     *,
     seed: int = int(WORKLOAD["seed"]),
     target: str | None = None,
-    investigate: InvestigateFn = stub_investigate,
+    investigate: InvestigateFn = real_investigate,
     run_id: str | None = None,
     warmup_seconds: float | None = None,
+    measure_energy: bool = False,
 ) -> dict:
     """Run one fault experiment end to end and return the persisted run record."""
     faults = catalogues.load("faults")["faults"]
@@ -91,9 +147,22 @@ def run(
         },
         "ground_truth_label": None,
         "scored": {"correct": False, "abstained": False},
+        "baseline_energy": None,
     }
     injected: dict | None = None
+    energy_client: EnergyClient | None = None
     try:
+        # Start energy server and measure baseline BEFORE lab up (guide §13)
+        if measure_energy:
+            energy_client = _start_energy_server()
+            baseline = energy_client.measure_baseline(duration_seconds=10.0)
+            record["baseline_energy"] = {
+                "energy_joules": baseline.energy_joules,
+                "energy_method": baseline.energy_method,
+                "duration_seconds": baseline.duration_seconds,
+                "hardware_context": baseline.hardware_context,
+            }
+        
         lab.reset()  # 2
         if not lab.check_baseline(target=target or str(WORKLOAD["target"]), timeout=TIMEOUTS["baseline_vote"])["ok"]:
             raise _RunError("invalid_baseline")  # 3
@@ -116,7 +185,8 @@ def run(
             injected_at=str(injection["injected_at"]),
             parameters=fault.get("injection", {}).get("parameters"),
         )  # 6
-        result = investigate(LabTarget())  # 7
+        # Pass energy client to investigation for per-test measurement
+        result = investigate(LabTarget(), energy_client)  # 7
         record["diagnosis"] = _diagnosis(result)  # 8
         # The label reaches the record only now: diagnosis is frozen and scored.
         record["ground_truth_label"] = str(fault["label_cause"])
@@ -135,6 +205,8 @@ def run(
             lab.down()  # teardown
         except Exception:
             record["lab_status"] = "dirty"
+        # Always attempt to stop energy server (idempotent)
+        _stop_energy_server()
     _persist(record, rid)
     return record
 

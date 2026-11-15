@@ -55,6 +55,27 @@
           "npx",
           "-y",
           "@modelcontextprotocol/server-github"
+        ],
+        "environment": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "{file:~/.config/opencode/github.token}"
+        }
+      },
+      "netdata": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-netdata",
+          "http://127.0.0.1:19999"
+        ]
+      },
+      "energy": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-python",
+          "http://127.0.0.1:5001"
         ]
       }
     }

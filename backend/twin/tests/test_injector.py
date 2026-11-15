@@ -7,7 +7,8 @@ def test_apply_stops_the_service_and_verifies(lab_env):
     assert result["status"] == "verified"
     assert result["target_service"] == "redis"
     assert lab_env.running["redis"] is False
-    assert ("stop", "cid-redis") in lab_env.calls
+    # Stop is called with full container ID
+    assert any(call[0] == "stop" and "redis" in call[1] for call in lab_env.calls)
 
 
 def test_apply_reports_failed_when_the_stop_does_not_take_effect(lab_env):

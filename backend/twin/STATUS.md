@@ -74,17 +74,75 @@ Evidence:
   run record only gains `ground_truth_label` + `scored` after the diagnosis is
   frozen.
 
-Next session: Phase 4 — call `backend.api.investigate`, then wrap the existing
-`backend/collectors/` into `available_tests`/`execute_test`/`TestResult`.
+## Phase 4 — real diagnostic entry point (done 2026-11-15)
+
+1. `backend/api/investigate.py`: implemented `investigate(LabTarget) -> InvestigationResult`
+   wiring catalogues, collectors, Bayesian engine, planner.
+2. Diagnostic backend merged from teammate branch: catalogues, collectors, Bayesian,
+   planner, orchestrator, diagnostic adapter.
+3. Twin now calls real `investigate()` instead of stub.
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 26 passed
+```
+
+## Phase 5 — additional fault types (done 2026-11-15)
+
+| Fault | Method | Target | Label | Verified |
+|---|---|---|---|---|
+| `worker_process_stopped` | `docker_stop` | worker | `worker_process_stopped` | ✅ |
+| `redis_network_unreachable` | `network_partition` | worker | `worker_redis_network_failure` | ✅ |
+| `connectivity_or_endpoint` | `dns_override` | worker | `worker_redis_endpoint_wrong` | ✅ |
+| `other_unknown` | `chaos` (STOP/CONT) | worker | `other_unknown` | ✅ |
+
+- Live tests enabled: `worker_runtime_state`, `worker_redis_connectivity` (Docker-backed)
+- Injector extended with network partition, DNS override, chaos injection
+- All 4 new faults: apply → verify → revert cycle works
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 26 passed
+```
+
+## Phase 6 — schema, aggregates, calibration/evaluation splits (done 2026-11-15)
+
+| Artifact | Location | Status |
+|---|---|---|
+| Run record JSON schema | `experiments/schema/run_record.schema.json` | ✅ |
+| All 17 run records validated | `experiments/runs/` | ✅ 17/17 valid |
+| Per-fault aggregates | `experiments/aggregates/` | ✅ |
+| Likelihood tables (smoothed) | `experiments/aggregates/likelihoods.json` | ✅ |
+| Calibration/evaluation split | seed % 2 (even=cal, odd=eval) | ✅ |
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 26 passed
+python -m backend.twin.scoring.aggregate  # aggregates generated
+```
+
+## Phase 7 — Repair validator (done 2026-11-15)
+
+| Artifact | Location | Status |
+|---|---|---|
+| Repair catalogue | `backend/twin/catalogues/repairs.yaml` | ✅ 6 repairs |
+| Repair validator | `backend/twin/repair/validator.py` | ✅ |
+| All repairs tested with real lab | 6/6 faults → restored | ✅ |
+| Unit tests | `backend/twin/tests/test_repair.py` | ✅ 6 passed |
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 32 passed
+```
 
 ## Later phases (§18)
 
 | Phase | Steps | Scope |
 |---|---|---|
-| 4 | 6–7 | Call `backend.api.investigate`, then wrap existing `backend/collectors/` into `available_tests`/`execute_test`/`TestResult` |
-| 5 | 8 | `worker_process_stopped`, `redis_network_unreachable`, `connectivity_or_endpoint`, unmodeled faults for `other_unknown` |
-| 6 | 9–10 | `experiments/schema/run_record.schema.json`, per-fault aggregates, calibration/evaluation splits |
-| 7 | 11 | Repair validator (`catalogues/repairs.yaml`) |
 | 8 | 12 | Energy measurement after latency is reliable |
 | 9 | 13 | Twin self-validation, results in `experiments/validation/` |
 

@@ -41,6 +41,15 @@ class FakeDocker:
         return subprocess.CompletedProcess(["docker", *args], code, stdout, "")
 
     def _respond(self, args: tuple[str, ...]) -> tuple[str, int]:
+        def _service_from_cid(cid: str) -> str:
+            if cid.startswith("cid-"):
+                return cid[4:]
+            if cid.startswith("full-id-"):
+                parts = cid.split("-")
+                if len(parts) >= 3:
+                    return parts[2]
+            return cid
+
         head = args[0]
         if head == "ps":
             service = _filter_value(args, "com.docker.compose.service=")
@@ -50,15 +59,24 @@ class FakeDocker:
         if head in ("volume", "network") and "ls" in args:
             return "".join(f"{item}\n" for item in self.leftovers[f"{head}s"]), 0
         if head == "stop":
-            service = args[1].removeprefix("cid-")
+            service = _service_from_cid(args[1])
             if self.stop_takes_effect:
                 self.running[service] = False
             return "", 0
         if head == "start":
-            self.running[args[1].removeprefix("cid-")] = True
+            self.running[_service_from_cid(args[1])] = True
             return "", 0
         if head == "inspect":
-            service = args[-1].removeprefix("cid-")
+            if len(args) >= 3 and args[1] == "-f" and args[2] == "{{.Id}}":
+                service = _service_from_cid(args[-1])
+                return f"full-id-{service}-{'0'*56}\n", 0
+            if len(args) >= 3 and args[1] == "-f" and args[2] == "{{.State.Running}}":
+                service = _service_from_cid(args[-1])
+                return ("true" if self.running.get(service) else "false") + "\n", 0
+            if len(args) >= 3 and args[1] == "-f" and "{{json" in args[2]:
+                # Return fake network config for network_connected verification
+                return json.dumps({"infrasage-lab_back-tier": {"IPAddress": "172.18.0.2"}}) + "\n", 0
+            service = _service_from_cid(args[-1])
             return ("true" if self.running.get(service) else "false") + "\n", 0
         if head == "compose":
             return self._compose(args)
@@ -96,6 +114,20 @@ class FakeDocker:
                     return "\n", 0
                 match = re.search(r"id = '([^']*)'", command[-1])
                 return self.votes.get(match.group(1), "") + "\n" if match else "\n", 0
+        if head == "start":
+            self.running[_service_from_cid(args[1])] = True
+            return "", 0
+        if head == "network":
+            # network connect/disconnect - just succeed
+            return "", 0
+        if head == "kill":
+            # kill --signal=CONT - just succeed
+            return "", 0
+        if head == "inspect":
+            # Handle network inspect for network_connected verification
+            if len(args) >= 3 and args[1] == "-f" and "{{json" in args[2]:
+                # Return fake network config showing back-tier is connected
+                return '{"infrasage-lab_back-tier": {"IPAddress": "172.18.0.2"}}\n', 0
         return "", 0
 
 

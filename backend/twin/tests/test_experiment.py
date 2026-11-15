@@ -23,7 +23,7 @@ def test_stub_diagnostic_returns_a_fixed_answer():
 
 
 def test_full_run_writes_a_valid_record(lab_env, run_env):
-    record = experiment.run("redis_process_stopped", seed=420, run_id=RUN_ID, target=lab_env.target, warmup_seconds=0.0)
+    record = experiment.run("redis_process_stopped", seed=420, run_id=RUN_ID, target=lab_env.target, investigate=experiment.stub_investigate, warmup_seconds=0.0)
     assert record["lab_status"] == "valid"
     assert record["scenario"] == "redis_process_stopped"
     assert record["split"] == "calibration"
@@ -38,7 +38,7 @@ def test_full_run_writes_a_valid_record(lab_env, run_env):
 def test_label_timing_and_run_record_contents(lab_env, run_env, tmp_path, monkeypatch):
     seen: dict = {}
 
-    def stub(target: LabTarget) -> InvestigationResult:
+    def stub(target: LabTarget, energy_client=None) -> InvestigationResult:
         seen["label_exists_at_investigation"] = store.path_for(RUN_ID).exists()
         return experiment.stub_investigate(target)
 
@@ -82,4 +82,5 @@ def test_investigation_error_marks_the_run_error_and_tears_down(lab_env, run_env
 def test_full_run_tears_the_stack_down_after_successful_injection(lab_env, run_env):
     experiment.run("redis_process_stopped", seed=420, run_id=RUN_ID, target=lab_env.target, warmup_seconds=0.0)
     assert any("down" in call for call in lab_env.calls)
-    assert ("start", "cid-redis") in lab_env.calls
+    # Start is called with full container ID
+    assert any(call[0] == "start" and "redis" in call[1] for call in lab_env.calls)

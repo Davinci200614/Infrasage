@@ -1,0 +1,1564 @@
+{
+  "schema_version": 1,
+  "model_id": "voting-app-synthetic-bootstrap",
+  "version": "0.1.0",
+  "status": "synthetic_provisional_not_calibrated",
+  "usage_policy": {
+    "simulation": true,
+    "live_diagnosis": false,
+    "reason": "Not empirically estimated; false confidence risk"
+  },
+  "assumptions": [
+    "Single dominant initiating fault",
+    "Per-test outcomes are modeled conditionally independent given hypothesis; correlated tests must be grouped or handled explicitly",
+    "Unknown/other distributions are deliberately uninformative placeholders, not calibrated open-set diagnosis",
+    "Synthetic priors are not production failure frequencies",
+    "Incident-triggering evidence should not be counted again as an independent test"
+  ],
+  "source_dataset": null,
+  "training_counts": null,
+  "priors": {
+    "redis_process_stopped": 0.099009901,
+    "redis_service_degraded": 0.069306931,
+    "worker_process_stopped": 0.089108911,
+    "postgres_process_stopped": 0.089108911,
+    "postgres_connection_saturation": 0.059405941,
+    "worker_redis_network_failure": 0.069306931,
+    "worker_postgres_network_failure": 0.069306931,
+    "worker_redis_endpoint_wrong": 0.04950495,
+    "worker_postgres_endpoint_wrong": 0.04950495,
+    "host_cpu_saturation": 0.059405941,
+    "host_memory_pressure": 0.059405941,
+    "host_disk_pressure": 0.04950495,
+    "vote_frontend_unavailable": 0.04950495,
+    "result_frontend_unavailable": 0.04950495,
+    "other_unknown": 0.089108911
+  },
+  "likelihoods": {
+    "redis_runtime_state": {
+      "redis_process_stopped": {
+        "running": 0.05,
+        "stopped": 0.9,
+        "restarting": 0.05
+      },
+      "redis_service_degraded": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_process_stopped": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "postgres_process_stopped": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "postgres_connection_saturation": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_redis_network_failure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_cpu_saturation": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_memory_pressure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_disk_pressure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "result_frontend_unavailable": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "other_unknown": {
+        "running": 0.3333333,
+        "stopped": 0.3333333,
+        "restarting": 0.3333334
+      }
+    },
+    "redis_service_health": {
+      "redis_process_stopped": {
+        "healthy": 0.05,
+        "unreachable": 0.9,
+        "degraded": 0.05
+      },
+      "redis_service_degraded": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "degraded": 0.9
+      },
+      "worker_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "postgres_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "postgres_connection_saturation": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "worker_redis_network_failure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "host_cpu_saturation": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "degraded": 0.9
+      },
+      "host_memory_pressure": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "degraded": 0.9
+      },
+      "host_disk_pressure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "result_frontend_unavailable": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "other_unknown": {
+        "healthy": 0.3333333,
+        "unreachable": 0.3333333,
+        "degraded": 0.3333334
+      }
+    },
+    "worker_runtime_state": {
+      "redis_process_stopped": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "redis_service_degraded": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_process_stopped": {
+        "running": 0.05,
+        "stopped": 0.9,
+        "restarting": 0.05
+      },
+      "postgres_process_stopped": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "postgres_connection_saturation": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_redis_network_failure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_cpu_saturation": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_memory_pressure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_disk_pressure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "result_frontend_unavailable": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "other_unknown": {
+        "running": 0.3333333,
+        "stopped": 0.3333333,
+        "restarting": 0.3333334
+      }
+    },
+    "postgres_runtime_state": {
+      "redis_process_stopped": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "redis_service_degraded": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_process_stopped": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "postgres_process_stopped": {
+        "running": 0.05,
+        "stopped": 0.9,
+        "restarting": 0.05
+      },
+      "postgres_connection_saturation": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_redis_network_failure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_cpu_saturation": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_memory_pressure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "host_disk_pressure": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "result_frontend_unavailable": {
+        "running": 0.88,
+        "stopped": 0.06,
+        "restarting": 0.06
+      },
+      "other_unknown": {
+        "running": 0.3333333,
+        "stopped": 0.3333333,
+        "restarting": 0.3333334
+      }
+    },
+    "postgres_service_health": {
+      "redis_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "redis_service_degraded": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "worker_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "postgres_process_stopped": {
+        "healthy": 0.05,
+        "unreachable": 0.9,
+        "degraded": 0.05
+      },
+      "postgres_connection_saturation": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "degraded": 0.9
+      },
+      "worker_redis_network_failure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "host_cpu_saturation": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "degraded": 0.9
+      },
+      "host_memory_pressure": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "degraded": 0.9
+      },
+      "host_disk_pressure": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "degraded": 0.9
+      },
+      "vote_frontend_unavailable": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "result_frontend_unavailable": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "degraded": 0.06
+      },
+      "other_unknown": {
+        "healthy": 0.3333333,
+        "unreachable": 0.3333333,
+        "degraded": 0.3333334
+      }
+    },
+    "worker_redis_connectivity": {
+      "redis_process_stopped": {
+        "connected": 0.05,
+        "refused": 0.9,
+        "timeout": 0.05
+      },
+      "redis_service_degraded": {
+        "connected": 0.05,
+        "refused": 0.05,
+        "timeout": 0.9
+      },
+      "worker_process_stopped": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "postgres_process_stopped": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "postgres_connection_saturation": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_redis_network_failure": {
+        "connected": 0.05,
+        "refused": 0.05,
+        "timeout": 0.9
+      },
+      "worker_postgres_network_failure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "connected": 0.05,
+        "refused": 0.9,
+        "timeout": 0.05
+      },
+      "worker_postgres_endpoint_wrong": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_cpu_saturation": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_memory_pressure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_disk_pressure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "result_frontend_unavailable": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "other_unknown": {
+        "connected": 0.3333333,
+        "refused": 0.3333333,
+        "timeout": 0.3333334
+      }
+    },
+    "worker_postgres_connectivity": {
+      "redis_process_stopped": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "redis_service_degraded": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_process_stopped": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "postgres_process_stopped": {
+        "connected": 0.05,
+        "refused": 0.9,
+        "timeout": 0.05
+      },
+      "postgres_connection_saturation": {
+        "connected": 0.05,
+        "refused": 0.05,
+        "timeout": 0.9
+      },
+      "worker_redis_network_failure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "connected": 0.05,
+        "refused": 0.05,
+        "timeout": 0.9
+      },
+      "worker_redis_endpoint_wrong": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "connected": 0.05,
+        "refused": 0.9,
+        "timeout": 0.05
+      },
+      "host_cpu_saturation": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_memory_pressure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_disk_pressure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "result_frontend_unavailable": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "other_unknown": {
+        "connected": 0.3333333,
+        "refused": 0.3333333,
+        "timeout": 0.3333334
+      }
+    },
+    "worker_redis_endpoint": {
+      "redis_process_stopped": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "redis_service_degraded": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_process_stopped": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "postgres_process_stopped": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "postgres_connection_saturation": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_redis_network_failure": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_postgres_network_failure": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_redis_endpoint_wrong": {
+        "correct": 0.1,
+        "incorrect": 0.9
+      },
+      "worker_postgres_endpoint_wrong": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "host_cpu_saturation": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "host_memory_pressure": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "host_disk_pressure": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "vote_frontend_unavailable": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "result_frontend_unavailable": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "other_unknown": {
+        "correct": 0.5,
+        "incorrect": 0.5
+      }
+    },
+    "worker_postgres_endpoint": {
+      "redis_process_stopped": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "redis_service_degraded": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_process_stopped": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "postgres_process_stopped": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "postgres_connection_saturation": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_redis_network_failure": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_postgres_network_failure": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_redis_endpoint_wrong": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "worker_postgres_endpoint_wrong": {
+        "correct": 0.1,
+        "incorrect": 0.9
+      },
+      "host_cpu_saturation": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "host_memory_pressure": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "host_disk_pressure": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "vote_frontend_unavailable": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "result_frontend_unavailable": {
+        "correct": 0.88,
+        "incorrect": 0.12
+      },
+      "other_unknown": {
+        "correct": 0.5,
+        "incorrect": 0.5
+      }
+    },
+    "host_cpu_pressure": {
+      "redis_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "redis_service_degraded": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "postgres_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "postgres_connection_saturation": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_redis_network_failure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "host_cpu_saturation": {
+        "normal": 0.05,
+        "high": 0.05,
+        "critical": 0.9
+      },
+      "host_memory_pressure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "host_disk_pressure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "result_frontend_unavailable": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "other_unknown": {
+        "normal": 0.3333333,
+        "high": 0.3333333,
+        "critical": 0.3333334
+      }
+    },
+    "host_memory_pressure": {
+      "redis_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "redis_service_degraded": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "postgres_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "postgres_connection_saturation": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_redis_network_failure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "host_cpu_saturation": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "host_memory_pressure": {
+        "normal": 0.05,
+        "high": 0.05,
+        "critical": 0.9
+      },
+      "host_disk_pressure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "result_frontend_unavailable": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "other_unknown": {
+        "normal": 0.3333333,
+        "high": 0.3333333,
+        "critical": 0.3333334
+      }
+    },
+    "host_disk_pressure": {
+      "redis_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "redis_service_degraded": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "postgres_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "postgres_connection_saturation": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_redis_network_failure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "host_cpu_saturation": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "host_memory_pressure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "host_disk_pressure": {
+        "normal": 0.05,
+        "high": 0.05,
+        "critical": 0.9
+      },
+      "vote_frontend_unavailable": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "result_frontend_unavailable": {
+        "normal": 0.88,
+        "high": 0.06,
+        "critical": 0.06
+      },
+      "other_unknown": {
+        "normal": 0.3333333,
+        "high": 0.3333333,
+        "critical": 0.3333334
+      }
+    },
+    "vote_http_check": {
+      "redis_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "redis_service_degraded": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "postgres_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "postgres_connection_saturation": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_redis_network_failure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "host_cpu_saturation": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "error": 0.9
+      },
+      "host_memory_pressure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "host_disk_pressure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "healthy": 0.05,
+        "unreachable": 0.9,
+        "error": 0.05
+      },
+      "result_frontend_unavailable": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "other_unknown": {
+        "healthy": 0.3333333,
+        "unreachable": 0.3333333,
+        "error": 0.3333334
+      }
+    },
+    "result_http_check": {
+      "redis_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "redis_service_degraded": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_process_stopped": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "postgres_process_stopped": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "error": 0.9
+      },
+      "postgres_connection_saturation": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_redis_network_failure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "host_cpu_saturation": {
+        "healthy": 0.05,
+        "unreachable": 0.05,
+        "error": 0.9
+      },
+      "host_memory_pressure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "host_disk_pressure": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "healthy": 0.88,
+        "unreachable": 0.06,
+        "error": 0.06
+      },
+      "result_frontend_unavailable": {
+        "healthy": 0.05,
+        "unreachable": 0.9,
+        "error": 0.05
+      },
+      "other_unknown": {
+        "healthy": 0.3333333,
+        "unreachable": 0.3333333,
+        "error": 0.3333334
+      }
+    },
+    "vote_to_redis_connectivity": {
+      "redis_process_stopped": {
+        "connected": 0.05,
+        "refused": 0.9,
+        "timeout": 0.05
+      },
+      "redis_service_degraded": {
+        "connected": 0.05,
+        "refused": 0.05,
+        "timeout": 0.9
+      },
+      "worker_process_stopped": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "postgres_process_stopped": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "postgres_connection_saturation": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_redis_network_failure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_cpu_saturation": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_memory_pressure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_disk_pressure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "result_frontend_unavailable": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "other_unknown": {
+        "connected": 0.3333333,
+        "refused": 0.3333333,
+        "timeout": 0.3333334
+      }
+    },
+    "result_postgres_connectivity": {
+      "redis_process_stopped": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "redis_service_degraded": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_process_stopped": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "postgres_process_stopped": {
+        "connected": 0.05,
+        "refused": 0.9,
+        "timeout": 0.05
+      },
+      "postgres_connection_saturation": {
+        "connected": 0.05,
+        "refused": 0.05,
+        "timeout": 0.9
+      },
+      "worker_redis_network_failure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_cpu_saturation": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_memory_pressure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "host_disk_pressure": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "result_frontend_unavailable": {
+        "connected": 0.88,
+        "refused": 0.06,
+        "timeout": 0.06
+      },
+      "other_unknown": {
+        "connected": 0.3333333,
+        "refused": 0.3333333,
+        "timeout": 0.3333334
+      }
+    },
+    "redis_restart_activity": {
+      "redis_process_stopped": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "redis_service_degraded": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "worker_process_stopped": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "postgres_process_stopped": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "postgres_connection_saturation": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "worker_redis_network_failure": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "host_cpu_saturation": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "host_memory_pressure": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "host_disk_pressure": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "vote_frontend_unavailable": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "result_frontend_unavailable": {
+        "none": 0.88,
+        "repeated": 0.06,
+        "recent": 0.06
+      },
+      "other_unknown": {
+        "none": 0.3333333,
+        "repeated": 0.3333333,
+        "recent": 0.3333334
+      }
+    },
+    "worker_error_signature": {
+      "redis_process_stopped": {
+        "none": 0.0333333,
+        "redis_error": 0.9,
+        "postgres_error": 0.0333333,
+        "other_error": 0.0333334
+      },
+      "redis_service_degraded": {
+        "none": 0.0333333,
+        "redis_error": 0.9,
+        "postgres_error": 0.0333333,
+        "other_error": 0.0333334
+      },
+      "worker_process_stopped": {
+        "none": 0.88,
+        "redis_error": 0.04,
+        "postgres_error": 0.04,
+        "other_error": 0.04
+      },
+      "postgres_process_stopped": {
+        "none": 0.0333333,
+        "redis_error": 0.0333333,
+        "postgres_error": 0.9,
+        "other_error": 0.0333334
+      },
+      "postgres_connection_saturation": {
+        "none": 0.0333333,
+        "redis_error": 0.0333333,
+        "postgres_error": 0.9,
+        "other_error": 0.0333334
+      },
+      "worker_redis_network_failure": {
+        "none": 0.0333333,
+        "redis_error": 0.9,
+        "postgres_error": 0.0333333,
+        "other_error": 0.0333334
+      },
+      "worker_postgres_network_failure": {
+        "none": 0.0333333,
+        "redis_error": 0.0333333,
+        "postgres_error": 0.9,
+        "other_error": 0.0333334
+      },
+      "worker_redis_endpoint_wrong": {
+        "none": 0.0333333,
+        "redis_error": 0.9,
+        "postgres_error": 0.0333333,
+        "other_error": 0.0333334
+      },
+      "worker_postgres_endpoint_wrong": {
+        "none": 0.0333333,
+        "redis_error": 0.0333333,
+        "postgres_error": 0.9,
+        "other_error": 0.0333334
+      },
+      "host_cpu_saturation": {
+        "none": 0.88,
+        "redis_error": 0.04,
+        "postgres_error": 0.04,
+        "other_error": 0.04
+      },
+      "host_memory_pressure": {
+        "none": 0.88,
+        "redis_error": 0.04,
+        "postgres_error": 0.04,
+        "other_error": 0.04
+      },
+      "host_disk_pressure": {
+        "none": 0.88,
+        "redis_error": 0.04,
+        "postgres_error": 0.04,
+        "other_error": 0.04
+      },
+      "vote_frontend_unavailable": {
+        "none": 0.88,
+        "redis_error": 0.04,
+        "postgres_error": 0.04,
+        "other_error": 0.04
+      },
+      "result_frontend_unavailable": {
+        "none": 0.88,
+        "redis_error": 0.04,
+        "postgres_error": 0.04,
+        "other_error": 0.04
+      },
+      "other_unknown": {
+        "none": 0.25,
+        "redis_error": 0.25,
+        "postgres_error": 0.25,
+        "other_error": 0.25
+      }
+    },
+    "postgres_connection_saturation": {
+      "redis_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "redis_service_degraded": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "worker_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "postgres_process_stopped": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "postgres_connection_saturation": {
+        "normal": 0.05,
+        "high": 0.05,
+        "exhausted": 0.9
+      },
+      "worker_redis_network_failure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "worker_postgres_network_failure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "worker_redis_endpoint_wrong": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "worker_postgres_endpoint_wrong": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "host_cpu_saturation": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "host_memory_pressure": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "host_disk_pressure": {
+        "normal": 0.05,
+        "high": 0.9,
+        "exhausted": 0.05
+      },
+      "vote_frontend_unavailable": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "result_frontend_unavailable": {
+        "normal": 0.88,
+        "high": 0.06,
+        "exhausted": 0.06
+      },
+      "other_unknown": {
+        "normal": 0.3333333,
+        "high": 0.3333333,
+        "exhausted": 0.3333334
+      }
+    },
+    "voting_e2e_consistency": {
+      "redis_process_stopped": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "redis_service_degraded": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "worker_process_stopped": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "postgres_process_stopped": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "postgres_connection_saturation": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "worker_redis_network_failure": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "worker_postgres_network_failure": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "worker_redis_endpoint_wrong": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "worker_postgres_endpoint_wrong": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "host_cpu_saturation": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "host_memory_pressure": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "host_disk_pressure": {
+        "consistent": 0.05,
+        "delayed": 0.9,
+        "inconsistent": 0.05
+      },
+      "vote_frontend_unavailable": {
+        "consistent": 0.05,
+        "delayed": 0.05,
+        "inconsistent": 0.9
+      },
+      "result_frontend_unavailable": {
+        "consistent": 0.05,
+        "delayed": 0.05,
+        "inconsistent": 0.9
+      },
+      "other_unknown": {
+        "consistent": 0.3333333,
+        "delayed": 0.3333333,
+        "inconsistent": 0.3333334
+      }
+    }
+  }
+}

@@ -73,6 +73,10 @@ def compute_likelihood_tables(runs: list[dict]) -> dict:
     for run in runs:
         if run.get("split") != "calibration" or run.get("lab_status") != "valid":
             continue
+        diag = run.get("diagnosis", {})
+        # Skip abstained runs - they have no meaningful test outcomes
+        if diag.get("abstained") or not diag.get("tests"):
+            continue
         label = run.get("ground_truth_label")
         if not label:
             continue

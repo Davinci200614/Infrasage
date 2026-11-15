@@ -227,6 +227,32 @@
           "description": "Investigation abstained"
         }
       }
+    },
+    "baseline_energy": {
+      "type": ["object", "null"],
+      "description": "Host baseline energy measurement (no lab running)",
+      "additionalProperties": false,
+      "properties": {
+        "energy_joules": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Baseline energy in joules"
+        },
+        "energy_method": {
+          "type": "string",
+          "enum": ["measured", "estimated", "not_measured"],
+          "description": "Energy measurement method"
+        },
+        "duration_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Baseline measurement duration"
+        },
+        "hardware_context": {
+          "type": "object",
+          "description": "Hardware/OS context for energy reporting"
+        }
+      }
     }
   }
 }

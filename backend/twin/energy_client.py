@@ -84,7 +84,11 @@ class EnergyClient:
         return {"status": "error", "rapl_available": False}
 
     def measure_baseline(self, duration_seconds: float = 10.0) -> BaselineEnergy:
-        """Measure host baseline energy without lab running."""
+        """Measure host baseline energy without lab running.
+        
+        Note: CPU-based fallback blocks for `duration_seconds` to measure CPU%.
+        For non-blocking baseline, use RAPL server (requires root).
+        """
         health = self.health_check()
         rapl_available = health.get("rapl_available", False)
 
@@ -107,7 +111,7 @@ class EnergyClient:
             except Exception:
                 pass
 
-        # Fallback: CPU-based estimation
+        # Fallback: CPU-based estimation (blocks for duration_seconds)
         cpu_percent = psutil.cpu_percent(interval=duration_seconds)
         # Rough estimate: assume ~65W TDP for typical server CPU (configurable via INFRASAGE_CPU_TDP)
         estimated_joules = _DEFAULT_CPU_TDP_WATTS * (cpu_percent / 100) * duration_seconds

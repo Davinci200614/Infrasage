@@ -170,7 +170,7 @@ def run(
             seconds=float(WORKLOAD["warmup_seconds"]) if warmup_seconds is None else warmup_seconds,
             target=str(WORKLOAD["target"]),
             rate=float(WORKLOAD["rate_per_second"]),
-            seed=int(WORKLOAD["seed"]),
+            seed=seed,
         )
         record["workload"]["votes_submitted"] = len(votes)
         injection = injector.apply(fault_name)  # 5

@@ -1,0 +1,67 @@
+# Isolated single-replica adaptation of dockersamples/example-voting-app/docker-stack.yml.
+# Images and ownership token must be supplied explicitly by setup_voting_app_lab.py.
+x-labels: &owned
+  org.infrasage.lab: voting-app-phase2c
+  org.infrasage.lab.token: ${INFRASAGE_LAB_TOKEN:?Run the lab setup script}
+services:
+  redis:
+    image: ${REDIS_IMAGE:?Pinned Redis image required}
+    command: [redis-server, --save, "", --appendonly, "no", --unixsocket, /tmp/redis.sock, --unixsocketperm, "700"]
+    labels: *owned
+    networks: [redis-tier]
+    mem_limit: 128m
+    healthcheck:
+      test: [CMD, redis-cli, -s, /tmp/redis.sock, ping]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  db:
+    image: ${DB_IMAGE:?Pinned PostgreSQL image required}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    labels: *owned
+    networks: [db-tier]
+    volumes: [db-data:/var/lib/postgresql/data]
+    mem_limit: 256m
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  worker:
+    image: ${WORKER_IMAGE:?Official sample worker image required}
+    labels: *owned
+    networks: [redis-tier, db-tier]
+    depends_on:
+      redis: {condition: service_healthy}
+      db: {condition: service_healthy}
+    mem_limit: 256m
+  vote:
+    image: ${VOTE_IMAGE:?Official sample vote image required}
+    labels: *owned
+    networks: [redis-tier, ui-tier]
+    ports: ["127.0.0.1::80"]
+    depends_on:
+      redis: {condition: service_healthy}
+    mem_limit: 128m
+  result:
+    image: ${RESULT_IMAGE:?Official sample result image required}
+    labels: *owned
+    networks: [db-tier, ui-tier]
+    ports: ["127.0.0.1::80"]
+    depends_on:
+      db: {condition: service_healthy}
+    mem_limit: 128m
+networks:
+  ui-tier:
+    labels: *owned
+  redis-tier:
+    internal: true
+    labels: *owned
+  db-tier:
+    internal: true
+    labels: *owned
+volumes:
+  db-data:
+    labels: *owned

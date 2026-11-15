@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "source": "https://github.com/dockersamples/example-voting-app/blob/main/docker-stack.yml",
+  "note": "Immutable registry references observed in the Phase 2C lab; platform/image IDs are retained in experiment records.",
+  "images": {
+    "redis": "redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+    "db": "postgres@sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba",
+    "worker": "dockersamples/examplevotingapp_worker@sha256:c8a8571065479c12567e8e440836e543d185c678cd4781a32b100f71e8f39c86",
+    "vote": "dockersamples/examplevotingapp_vote@sha256:7102d3b952ec84e3541ee12e7217e320c52aed60b13501c3158f46376a907466",
+    "result": "dockersamples/examplevotingapp_result@sha256:06c50992ab258e1d83406784040842bb920f6938eabac19261e7ec634f878935"
+  }
+}

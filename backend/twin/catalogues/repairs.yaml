@@ -1,0 +1,77 @@
+# Repair action catalogue (guide §12). Each entry is a fixed contract; the validator
+# must refuse actions not in this catalogue.
+#
+# version: increment when any action changes; invalidates prior repair runs.
+# fault: the fault this repair addresses (must exist in faults.yaml).
+# actions: ordered list of repair steps. Each step is a command template.
+#   Templates may use {target_service}, {project}, {redis_ip}, etc.
+#   Commands run in the lab host context with docker CLI access.
+
+version: 1
+
+repairs:
+  redis_process_stopped:
+    version: 1
+    fault: redis_process_stopped
+    target_service: redis
+    actions:
+      - method: docker_start
+        command: ["start", "{target_cid}"]
+        description: "Restart the stopped Redis container"
+        timeout_seconds: 15
+        verification: "service_running"
+
+  postgres_unavailable:
+    version: 1
+    fault: postgres_unavailable
+    target_service: db
+    actions:
+      - method: docker_start
+        command: ["start", "{target_cid}"]
+        description: "Restart the stopped PostgreSQL container"
+        timeout_seconds: 15
+        verification: "service_running"
+
+  worker_process_stopped:
+    version: 1
+    fault: worker_process_stopped
+    target_service: worker
+    actions:
+      - method: docker_start
+        command: ["start", "{target_cid}"]
+        description: "Restart the stopped worker container"
+        timeout_seconds: 15
+        verification: "service_running"
+
+  redis_network_unreachable:
+    version: 1
+    fault: redis_network_unreachable
+    target_service: worker
+    actions:
+      - method: network_reconnect
+        command: ["network", "connect", "infrasage-lab_back-tier", "{worker_cid}"]
+        description: "Reconnect worker to back-tier network"
+        timeout_seconds: 10
+        verification: "network_connected"
+
+  connectivity_or_endpoint:
+    version: 1
+    fault: connectivity_or_endpoint
+    target_service: worker
+    actions:
+      - method: dns_restore
+        command: ["exec", "{worker_cid}", "cp", "/etc/hosts.infrasage.bak", "/etc/hosts"]
+        description: "Restore original /etc/hosts in worker"
+        timeout_seconds: 10
+        verification: "dns_correct"
+
+  other_unknown:
+    version: 1
+    fault: other_unknown
+    target_service: worker
+    actions:
+      - method: chaos_resume
+        command: ["kill", "--signal=CONT", "{target_cid}"]
+        description: "Resume the STOP-paused worker"
+        timeout_seconds: 10
+        verification: "service_running"

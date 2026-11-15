@@ -1,0 +1,664 @@
+schema_version: 1
+catalogue_id: voting-app-bootstrap-tests
+version: 0.1.0
+live_execution_policy: deny_until_bound_and_verified
+assumption_policy: All tests are modelable; Netdata capabilities are assumed only for simulation; do not execute
+  unspecified endpoints.
+tests:
+  redis_runtime_state:
+    description: Docker container/process state, via verified Netdata capability or Docker fallback
+    component: redis
+    target_selector:
+      application: voting-app
+      component: redis
+    provider: netdata
+    execution:
+      mode: snapshot_or_function
+      logical_operation: container_process_state
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - running
+    - stopped
+    - restarting
+    normal_outcome: running
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.1
+      latency_ms: 120
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: redis_state
+    review_status: proposed_unvalidated
+  redis_service_health:
+    description: Redis availability/health from configured integration
+    component: redis
+    target_selector:
+      application: voting-app
+      component: redis
+    provider: netdata
+    execution:
+      mode: periodic_metric
+      logical_operation: redis_health_status
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - healthy
+    - unreachable
+    - degraded
+    normal_outcome: healthy
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 40
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: redis_health
+    review_status: proposed_unvalidated
+  worker_runtime_state:
+    description: Worker container state
+    component: worker
+    target_selector:
+      application: voting-app
+      component: worker
+    provider: netdata
+    execution:
+      mode: snapshot_or_function
+      logical_operation: container_process_state
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - running
+    - stopped
+    - restarting
+    normal_outcome: running
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.1
+      latency_ms: 120
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: worker_state
+    review_status: proposed_unvalidated
+  postgres_runtime_state:
+    description: PostgreSQL container/process state
+    component: db
+    target_selector:
+      application: voting-app
+      component: db
+    provider: netdata
+    execution:
+      mode: snapshot_or_function
+      logical_operation: container_process_state
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - running
+    - stopped
+    - restarting
+    normal_outcome: running
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.1
+      latency_ms: 120
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: postgres_state
+    review_status: proposed_unvalidated
+  postgres_service_health:
+    description: PostgreSQL connection and health indicators
+    component: db
+    target_selector:
+      application: voting-app
+      component: db
+    provider: netdata
+    execution:
+      mode: periodic_metric
+      logical_operation: postgres_health_status
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - healthy
+    - unreachable
+    - degraded
+    normal_outcome: healthy
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 40
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: db_health
+    review_status: proposed_unvalidated
+  worker_redis_connectivity:
+    description: Connectivity tested specifically from worker context to Redis
+    component: network
+    target_selector:
+      application: voting-app
+      component: network
+    provider: precision
+    execution:
+      mode: on_demand_probe
+      logical_operation: worker_to_redis_tcp
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - connected
+    - refused
+    - timeout
+    normal_outcome: connected
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.45
+      latency_ms: 250
+      status: illustrative_unmeasured
+    source_basis:
+    - voting_app_topology
+    - proposed_precision_probe
+    evidence_group: worker_redis_connectivity
+    review_status: proposed_unvalidated
+  worker_postgres_connectivity:
+    description: Connectivity tested specifically from worker context to PostgreSQL
+    component: network
+    target_selector:
+      application: voting-app
+      component: network
+    provider: precision
+    execution:
+      mode: on_demand_probe
+      logical_operation: worker_to_postgres_tcp
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - connected
+    - refused
+    - timeout
+    normal_outcome: connected
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.45
+      latency_ms: 250
+      status: illustrative_unmeasured
+    source_basis:
+    - voting_app_topology
+    - proposed_precision_probe
+    evidence_group: worker_postgres_connectivity
+    review_status: proposed_unvalidated
+  worker_redis_endpoint:
+    description: Compare configured Redis endpoint to service discovery
+    component: configuration
+    target_selector:
+      application: voting-app
+      component: configuration
+    provider: precision
+    execution:
+      mode: on_demand_probe
+      logical_operation: inspect_worker_redis_endpoint
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - correct
+    - incorrect
+    normal_outcome: correct
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.45
+      latency_ms: 250
+      status: illustrative_unmeasured
+    source_basis:
+    - voting_app_topology
+    - proposed_precision_probe
+    evidence_group: worker_redis_endpoint
+    review_status: proposed_unvalidated
+  worker_postgres_endpoint:
+    description: Compare configured PostgreSQL endpoint to service discovery
+    component: configuration
+    target_selector:
+      application: voting-app
+      component: configuration
+    provider: precision
+    execution:
+      mode: on_demand_probe
+      logical_operation: inspect_worker_db_endpoint
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - correct
+    - incorrect
+    normal_outcome: correct
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.45
+      latency_ms: 250
+      status: illustrative_unmeasured
+    source_basis:
+    - voting_app_topology
+    - proposed_precision_probe
+    evidence_group: worker_postgres_endpoint
+    review_status: proposed_unvalidated
+  host_cpu_pressure:
+    description: Host CPU utilization contextualized by incident window
+    component: host
+    target_selector:
+      application: voting-app
+      component: host
+    provider: netdata
+    execution:
+      mode: stored_metric
+      logical_operation: host_cpu_utilization
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - normal
+    - high
+    - critical
+    normal_outcome: normal
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    normalization:
+      status: provisional_research_thresholds_not_calibrated
+      metric: netdata.system.cpu.activity_percent
+      units: percentage
+      dimensions: [user, system, nice, irq, softirq, steal, guest, guest_nice]
+      definition: >-
+        Sum these disjoint Linux Netdata system.cpu chart percentages, excluding
+        iowait and idle. Netdata proc.plugin subtracts guest/guest_nice from
+        user/nice before charting; do not apply this formula to raw /proc/stat.
+      semantics_source: https://github.com/netdata/netdata/blob/master/src/collectors/proc.plugin/proc_stat.c
+      requested_window:
+        after_seconds: -5
+        points: 1
+        group: agent_default
+      window_limitation: Collector does not retain actual window bounds or grouping metadata
+      thresholds:
+        high_min_percent: 70
+        critical_min_percent: 90
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 45
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: host_cpu_pressure
+    review_status: proposed_unvalidated
+  host_memory_pressure:
+    description: Host memory pressure, swap and available memory
+    component: host
+    target_selector:
+      application: voting-app
+      component: host
+    provider: netdata
+    execution:
+      mode: stored_metric
+      logical_operation: host_memory_pressure
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - normal
+    - high
+    - critical
+    normal_outcome: normal
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 45
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: host_memory_pressure
+    review_status: proposed_unvalidated
+  host_disk_pressure:
+    description: Disk utilization, capacity and I/O pressure
+    component: host
+    target_selector:
+      application: voting-app
+      component: host
+    provider: netdata
+    execution:
+      mode: stored_metric
+      logical_operation: host_disk_usage_io
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - normal
+    - high
+    - critical
+    normal_outcome: normal
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 45
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: host_disk_pressure
+    review_status: proposed_unvalidated
+  vote_http_check:
+    description: Configured HTTP check for vote frontend
+    component: vote
+    target_selector:
+      application: voting-app
+      component: vote
+    provider: netdata
+    execution:
+      mode: periodic_metric
+      logical_operation: vote_http_health
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - healthy
+    - unreachable
+    - error
+    normal_outcome: healthy
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 40
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: vote_http_check
+    review_status: proposed_unvalidated
+  result_http_check:
+    description: Configured HTTP check for results frontend
+    component: result
+    target_selector:
+      application: voting-app
+      component: result
+    provider: netdata
+    execution:
+      mode: periodic_metric
+      logical_operation: result_http_health
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - healthy
+    - unreachable
+    - error
+    normal_outcome: healthy
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 40
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: result_http_check
+    review_status: proposed_unvalidated
+  vote_to_redis_connectivity:
+    description: Connectivity from vote frontend to Redis
+    component: network
+    target_selector:
+      application: voting-app
+      component: network
+    provider: precision
+    execution:
+      mode: on_demand_probe
+      logical_operation: vote_to_redis_tcp
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - connected
+    - refused
+    - timeout
+    normal_outcome: connected
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.45
+      latency_ms: 250
+      status: illustrative_unmeasured
+    source_basis:
+    - voting_app_topology
+    - proposed_precision_probe
+    evidence_group: vote_to_redis_connectivity
+    review_status: proposed_unvalidated
+  result_postgres_connectivity:
+    description: Connectivity from result frontend to database
+    component: network
+    target_selector:
+      application: voting-app
+      component: network
+    provider: precision
+    execution:
+      mode: on_demand_probe
+      logical_operation: result_to_postgres_tcp
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - connected
+    - refused
+    - timeout
+    normal_outcome: connected
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.45
+      latency_ms: 250
+      status: illustrative_unmeasured
+    source_basis:
+    - voting_app_topology
+    - proposed_precision_probe
+    evidence_group: result_postgres_connectivity
+    review_status: proposed_unvalidated
+  redis_restart_activity:
+    description: Container restart history during incident window
+    component: redis
+    target_selector:
+      application: voting-app
+      component: redis
+    provider: netdata
+    execution:
+      mode: stored_metric
+      logical_operation: container_restart_history
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - none
+    - repeated
+    - recent
+    normal_outcome: none
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 45
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: redis_state
+    review_status: proposed_unvalidated
+  worker_error_signature:
+    description: Bounded log inspection with privacy filtering and specific signatures
+    component: worker
+    target_selector:
+      application: voting-app
+      component: worker
+    provider: precision
+    execution:
+      mode: on_demand_probe
+      logical_operation: read_bounded_worker_logs
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - none
+    - redis_error
+    - postgres_error
+    - other_error
+    normal_outcome: none
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.45
+      latency_ms: 250
+      status: illustrative_unmeasured
+    source_basis:
+    - voting_app_topology
+    - proposed_precision_probe
+    evidence_group: worker_error_signature
+    review_status: proposed_unvalidated
+  postgres_connection_saturation:
+    description: PostgreSQL connection utilization, configured integration
+    component: db
+    target_selector:
+      application: voting-app
+      component: db
+    provider: netdata
+    execution:
+      mode: periodic_metric
+      logical_operation: postgres_connections
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - normal
+    - high
+    - exhausted
+    normal_outcome: normal
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: 15
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.02
+      latency_ms: 40
+      status: illustrative_unmeasured
+    source_basis:
+    - netdata_agent
+    - voting_app_topology
+    evidence_group: db_health
+    review_status: proposed_unvalidated
+  voting_e2e_consistency:
+    description: Sandbox-only synthetic vote lifecycle, may mutate application state
+    component: application
+    target_selector:
+      application: voting-app
+      component: application
+    provider: precision
+    execution:
+      mode: on_demand_probe
+      logical_operation: synthetic_vote_roundtrip
+      live_binding: null
+      binding_status: assumed_unverified
+      requires_configuration: true
+    outcomes:
+    - consistent
+    - delayed
+    - inconsistent
+    normal_outcome: consistent
+    availability:
+      simulation: true
+      live: false
+      reason: Provider capability/binding not validated against installed agent or collector
+    freshness_max_seconds: null
+    synthetic_cost_for_planner_simulation:
+      energy_j: 0.45
+      latency_ms: 250
+      status: illustrative_unmeasured
+    source_basis:
+    - voting_app_topology
+    - proposed_precision_probe
+    evidence_group: voting_e2e_consistency
+    review_status: proposed_unvalidated

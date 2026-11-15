@@ -1,0 +1,2142 @@
+{
+  "schema_version": 1,
+  "run_id": "700621927c59498c844aed3e1a1e9dde",
+  "scenario": "redis_port_unavailable",
+  "project": "infrasage-voting-phase2c-4db572e8bb",
+  "ground_truth": {
+    "fault": "Redis TCP port set to 0; Unix socket and process remain available",
+    "catalogue_hypothesis": "redis_service_degraded",
+    "mapping_note": "Provisional category mapping: running Redis with its TCP listener disabled"
+  },
+  "images": {
+    "redis": {
+      "reference": "redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+      "id": "sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+      "repo_digests": [
+        "redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe"
+      ],
+      "architecture": "amd64"
+    },
+    "db": {
+      "reference": "postgres@sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba",
+      "id": "sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba",
+      "repo_digests": [
+        "postgres@sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba"
+      ],
+      "architecture": "amd64"
+    },
+    "worker": {
+      "reference": "dockersamples/examplevotingapp_worker@sha256:c8a8571065479c12567e8e440836e543d185c678cd4781a32b100f71e8f39c86",
+      "id": "sha256:c8a8571065479c12567e8e440836e543d185c678cd4781a32b100f71e8f39c86",
+      "repo_digests": [
+        "dockersamples/examplevotingapp_worker@sha256:c8a8571065479c12567e8e440836e543d185c678cd4781a32b100f71e8f39c86"
+      ],
+      "architecture": "amd64"
+    },
+    "vote": {
+      "reference": "dockersamples/examplevotingapp_vote@sha256:7102d3b952ec84e3541ee12e7217e320c52aed60b13501c3158f46376a907466",
+      "id": "sha256:7102d3b952ec84e3541ee12e7217e320c52aed60b13501c3158f46376a907466",
+      "repo_digests": [
+        "dockersamples/examplevotingapp_vote@sha256:7102d3b952ec84e3541ee12e7217e320c52aed60b13501c3158f46376a907466"
+      ],
+      "architecture": "amd64"
+    },
+    "result": {
+      "reference": "dockersamples/examplevotingapp_result@sha256:06c50992ab258e1d83406784040842bb920f6938eabac19261e7ec634f878935",
+      "id": "sha256:06c50992ab258e1d83406784040842bb920f6938eabac19261e7ec634f878935",
+      "repo_digests": [
+        "dockersamples/examplevotingapp_result@sha256:06c50992ab258e1d83406784040842bb920f6938eabac19261e7ec634f878935"
+      ],
+      "architecture": "amd64"
+    }
+  },
+  "source": "https://github.com/dockersamples/example-voting-app/blob/main/docker-stack.yml",
+  "started_at": "2026-11-15T21:36:09.451116+00:00",
+  "baseline_before": {
+    "verified_at": "2026-11-15T21:36:09.232649+00:00",
+    "vote_url": "http://127.0.0.1:32769/",
+    "result_url": "http://127.0.0.1:32768/",
+    "voter_id": "phase2c-e7d01fa4f2684e1dabbad650fd3993da",
+    "vote_http_status": 200,
+    "result_http_status": 200,
+    "database_vote": "a",
+    "path": "actual vote HTTP -> Redis -> sample .NET worker -> PostgreSQL",
+    "result_scores_stream_verified": false
+  },
+  "state_before": {
+    "captured_at": "2026-11-15T21:36:09.409353+00:00",
+    "services": {
+      "db": {
+        "id": "01140ad3ae7f5aef78ed6fc8b39d60f9f7bc7ae167d7d22c89312abf001c81d6",
+        "name": "infrasage-voting-phase2c-4db572e8bb-db-1",
+        "image": "sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 13600,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:25:10.104653693Z",
+          "FinishedAt": "2026-11-15T21:06:46.162497333Z",
+          "Health": {
+            "Status": "healthy",
+            "FailingStreak": 0,
+            "Log": [
+              {
+                "Start": "2026-11-15T21:35:58.752481752Z",
+                "End": "2026-11-15T21:35:59.080883783Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:01.084654327Z",
+                "End": "2026-11-15T21:36:01.340669897Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:03.34361955Z",
+                "End": "2026-11-15T21:36:03.618740948Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:05.62186097Z",
+                "End": "2026-11-15T21:36:05.978535228Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:07.980535609Z",
+                "End": "2026-11-15T21:36:08.245954207Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              }
+            ]
+          }
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-db-1",
+              "db"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+            "EndpointID": "4acda25fec5da30c4c56dd39fde9d4a6f7580dbf6f44a3414099e03f0125f63c",
+            "Gateway": "",
+            "IPAddress": "172.18.0.2",
+            "MacAddress": "fe:0e:06:d5:05:e6",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-db-1",
+              "db",
+              "01140ad3ae7f"
+            ]
+          }
+        },
+        "ports": {
+          "5432/tcp": null
+        }
+      },
+      "redis": {
+        "id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+        "name": "infrasage-voting-phase2c-4db572e8bb-redis-1",
+        "image": "sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 33658,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:36:02.286716343Z",
+          "FinishedAt": "2026-11-15T21:35:57.636175555Z",
+          "Health": {
+            "Status": "healthy",
+            "FailingStreak": 0,
+            "Log": [
+              {
+                "Start": "2026-11-15T21:35:51.553648502Z",
+                "End": "2026-11-15T21:35:51.75787244Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              },
+              {
+                "Start": "2026-11-15T21:35:53.760789996Z",
+                "End": "2026-11-15T21:35:53.945928315Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              },
+              {
+                "Start": "2026-11-15T21:35:55.947525969Z",
+                "End": "2026-11-15T21:35:56.219906899Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:04.89686477Z",
+                "End": "2026-11-15T21:36:05.143435667Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:07.145800439Z",
+                "End": "2026-11-15T21:36:07.347780918Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              }
+            ]
+          }
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-redis-1",
+              "redis"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+            "EndpointID": "439b66edf418bab06577c4349096d859618158d608ea105a0e2475ee41c58fe9",
+            "Gateway": "",
+            "IPAddress": "172.19.0.2",
+            "MacAddress": "66:ae:05:49:19:58",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-redis-1",
+              "redis",
+              "0ac09d0840d6"
+            ]
+          }
+        },
+        "ports": {
+          "6379/tcp": null
+        }
+      },
+      "result": {
+        "id": "975d35d77c37172834e449933e28a72ef069b9697a567d1ada92a38db28651d1",
+        "name": "infrasage-voting-phase2c-4db572e8bb-result-1",
+        "image": "sha256:06c50992ab258e1d83406784040842bb920f6938eabac19261e7ec634f878935",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 13961,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:25:13.792546999Z",
+          "FinishedAt": "2026-11-15T21:06:46.158654381Z"
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-result-1",
+              "result"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+            "EndpointID": "7e4e4ef13933cf483a455971fbfc1cf4f56de679cf5144974fb6a67e94707c19",
+            "Gateway": "",
+            "IPAddress": "172.18.0.3",
+            "MacAddress": "b6:b3:f1:4b:3f:a9",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-result-1",
+              "result",
+              "975d35d77c37"
+            ]
+          },
+          "infrasage-voting-phase2c-4db572e8bb_ui-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-result-1",
+              "result"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "2fe6eca773c6e6fa0eae144e1a595b07e45c3b6a843b66de3d30ed2ededac991",
+            "EndpointID": "3d955db8fb888e43cce7c2e6bff578f245399967e800e30efb86c7d4ae7eb253",
+            "Gateway": "172.20.0.1",
+            "IPAddress": "172.20.0.2",
+            "MacAddress": "42:88:70:1e:fc:03",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-result-1",
+              "result",
+              "975d35d77c37"
+            ]
+          }
+        },
+        "ports": {
+          "80/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "32768"
+            }
+          ]
+        }
+      },
+      "vote": {
+        "id": "b32707e3a1d0255e94c04c8fa533cd3214688df21924a38eb38ea97eae161bff",
+        "name": "infrasage-voting-phase2c-4db572e8bb-vote-1",
+        "image": "sha256:7102d3b952ec84e3541ee12e7217e320c52aed60b13501c3158f46376a907466",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 14153,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:25:14.999248772Z",
+          "FinishedAt": "2026-11-15T21:06:46.154247477Z"
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-vote-1",
+              "vote"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+            "EndpointID": "bec0d9c1bf37a1a746f3a86ffedc6b89a6b562757d0683032e85493a41621b2b",
+            "Gateway": "",
+            "IPAddress": "172.19.0.3",
+            "MacAddress": "a6:f8:1e:35:4a:2e",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-vote-1",
+              "vote",
+              "b32707e3a1d0"
+            ]
+          },
+          "infrasage-voting-phase2c-4db572e8bb_ui-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-vote-1",
+              "vote"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "2fe6eca773c6e6fa0eae144e1a595b07e45c3b6a843b66de3d30ed2ededac991",
+            "EndpointID": "94cd579286aeee2696f07a57d393070893e6852525f5f6b0abd05e430c57198a",
+            "Gateway": "172.20.0.1",
+            "IPAddress": "172.20.0.3",
+            "MacAddress": "0e:6f:a0:91:1e:93",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-vote-1",
+              "vote",
+              "b32707e3a1d0"
+            ]
+          }
+        },
+        "ports": {
+          "80/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "32769"
+            }
+          ]
+        }
+      },
+      "worker": {
+        "id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+        "name": "infrasage-voting-phase2c-4db572e8bb-worker-1",
+        "image": "sha256:c8a8571065479c12567e8e440836e543d185c678cd4781a32b100f71e8f39c86",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 33873,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:36:03.569359763Z",
+          "FinishedAt": "2026-11-15T21:35:57.909430417Z"
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "worker"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+            "EndpointID": "25e0b8359768ccd235fed4697158f7627d83c86b3f9a5e80d0a97798a267eaa9",
+            "Gateway": "",
+            "IPAddress": "172.18.0.4",
+            "MacAddress": "6e:d0:d8:2d:ef:af",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "worker",
+              "1f526879fba1"
+            ]
+          },
+          "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "worker"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+            "EndpointID": "cdbb255a60456bfa5f26f7f99f6a58e3d90406a7e87da979bbf8459e55a41d4f",
+            "Gateway": "",
+            "IPAddress": "172.19.0.4",
+            "MacAddress": "86:da:9a:f1:f6:36",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "worker",
+              "1f526879fba1"
+            ]
+          }
+        },
+        "ports": {}
+      }
+    },
+    "worker_logs": "2026-11-15T21:34:58.612349167Z    at System.Threading.Tasks.Task`1.get_Result()\n2026-11-15T21:34:58.612366543Z    at Worker.Program.Main(String[] args) in /source/Program.cs:line 40\n2026-11-15T21:35:06.470982114Z Connected to db\n2026-11-15T21:35:06.507256909Z Found redis at 172.19.0.2\n2026-11-15T21:35:06.507310893Z Connecting to redis\n2026-11-15T21:35:07.550707301Z Processing vote for 'a' by 'phase2c-33e2f32ff4f74bdf807f284c799c3557'\n2026-11-15T21:35:45.212826594Z Processing vote for 'a' by 'phase2c-0eb1501262db43368a4419a7f66c921f'\n2026-11-15T21:35:55.664527763Z Processing vote for 'a' by 'phase2c-67db70456d244d1aac130c418f992bf8'\n2026-11-15T21:35:56.998574735Z Processing vote for 'a' by 'phase2c-32c2b9d6819d4a0297e4e559bab17f87'\n2026-11-15T21:35:57.790409391Z System.AggregateException: One or more errors occurred. (SocketFailure (ReadSocketError/ConnectionReset, last-recv: 5) on 172.19.0.2:6379/Interactive, Idle/Faulted, last: LPOP, origin: ReadFromPipe, outstanding: 1, last-read: 0s ago, last-write: 0s ago, unanswered-write: 0s ago, keep-alive: 60s, state: ConnectedEstablished, mgr: 8 of 10 available, in: 0, in-pipe: 0, out-pipe: 0, last-heartbeat: 0s ago, last-mbeat: 0s ago, global: 0s ago, v: 2.2.4.27433)\n2026-11-15T21:35:57.790496341Z  ---> StackExchange.Redis.RedisConnectionException: SocketFailure (ReadSocketError/ConnectionReset, last-recv: 5) on 172.19.0.2:6379/Interactive, Idle/Faulted, last: LPOP, origin: ReadFromPipe, outstanding: 1, last-read: 0s ago, last-write: 0s ago, unanswered-write: 0s ago, keep-alive: 60s, state: ConnectedEstablished, mgr: 8 of 10 available, in: 0, in-pipe: 0, out-pipe: 0, last-heartbeat: 0s ago, last-mbeat: 0s ago, global: 0s ago, v: 2.2.4.27433\n2026-11-15T21:35:57.790594439Z  ---> Pipelines.Sockets.Unofficial.ConnectionResetException: Connection reset by peer\n2026-11-15T21:35:57.790627996Z  ---> System.Net.Sockets.SocketException (104): Connection reset by peer\n2026-11-15T21:35:57.790728949Z    at Pipelines.Sockets.Unofficial.Internal.Throw.Socket(Int32 errorCode) in /_/src/Pipelines.Sockets.Unofficial/Internal/Throw.cs:line 59\n2026-11-15T21:35:57.790748370Z    at Pipelines.Sockets.Unofficial.SocketAwaitableEventArgs.GetResult() in /_/src/Pipelines.Sockets.Unofficial/SocketAwaitableEventArgs.cs:line 79\n2026-11-15T21:35:57.790762960Z    at Pipelines.Sockets.Unofficial.SocketConnection.DoReceiveAsync() in /_/src/Pipelines.Sockets.Unofficial/SocketConnection.Receive.cs:line 190\n2026-11-15T21:35:57.790928233Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.790952582Z    at System.IO.Pipelines.PipeCompletion.ThrowLatchedException()\n2026-11-15T21:35:57.790966739Z    at System.IO.Pipelines.Pipe.GetReadResult(ReadResult& result)\n2026-11-15T21:35:57.790980634Z    at System.IO.Pipelines.Pipe.GetReadAsyncResult()\n2026-11-15T21:35:57.791020199Z    at StackExchange.Redis.PhysicalConnection.ReadFromPipe() in /_/src/StackExchange.Redis/PhysicalConnection.cs:line 1550\n2026-11-15T21:35:57.791034973Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.791047749Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.791060460Z    at System.Threading.Tasks.Task`1.get_Result()\n2026-11-15T21:35:57.791094227Z    at Worker.Program.Main(String[] args) in /source/Program.cs:line 40\n2026-11-15T21:36:06.731960579Z Connected to db\n2026-11-15T21:36:06.753615227Z Found redis at 172.19.0.2\n2026-11-15T21:36:06.753619839Z Connecting to redis\n2026-11-15T21:36:07.629700415Z Processing vote for 'a' by 'phase2c-5c6ac1abebdc4c4b824f97a6adfb3a1d'\n2026-11-15T21:36:09.029389199Z Processing vote for 'a' by 'phase2c-e7d01fa4f2684e1dabbad650fd3993da'\n"
+  },
+  "diagnostic_endpoint": {
+    "host": "172.19.0.2",
+    "port": 6379,
+    "selection": "actual Redis IP discovered before injection on the owned Redis tier; retained during fault"
+  },
+  "fault_injection_verified": true,
+  "restoration": {
+    "success": true,
+    "healthy": {
+      "verified_at": "2026-11-15T21:36:24.185049+00:00",
+      "vote_url": "http://127.0.0.1:32769/",
+      "result_url": "http://127.0.0.1:32768/",
+      "voter_id": "phase2c-36b9c9b1652a497f9ce1bdf6a1404aea",
+      "vote_http_status": 200,
+      "result_http_status": 200,
+      "database_vote": "a",
+      "path": "actual vote HTTP -> Redis -> sample .NET worker -> PostgreSQL",
+      "result_scores_stream_verified": false
+    },
+    "state": {
+      "captured_at": "2026-11-15T21:36:24.364149+00:00",
+      "services": {
+        "db": {
+          "id": "01140ad3ae7f5aef78ed6fc8b39d60f9f7bc7ae167d7d22c89312abf001c81d6",
+          "name": "infrasage-voting-phase2c-4db572e8bb-db-1",
+          "image": "sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba",
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 13600,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-11-15T21:25:10.104653693Z",
+            "FinishedAt": "2026-11-15T21:06:46.162497333Z",
+            "Health": {
+              "Status": "healthy",
+              "FailingStreak": 0,
+              "Log": [
+                {
+                  "Start": "2026-11-15T21:36:14.800371864Z",
+                  "End": "2026-11-15T21:36:15.022412937Z",
+                  "ExitCode": 0,
+                  "Output": "/var/run/postgresql:5432 - accepting connections\n"
+                },
+                {
+                  "Start": "2026-11-15T21:36:17.025289005Z",
+                  "End": "2026-11-15T21:36:17.251677389Z",
+                  "ExitCode": 0,
+                  "Output": "/var/run/postgresql:5432 - accepting connections\n"
+                },
+                {
+                  "Start": "2026-11-15T21:36:19.254354211Z",
+                  "End": "2026-11-15T21:36:19.525915631Z",
+                  "ExitCode": 0,
+                  "Output": "/var/run/postgresql:5432 - accepting connections\n"
+                },
+                {
+                  "Start": "2026-11-15T21:36:21.528462084Z",
+                  "End": "2026-11-15T21:36:21.734954656Z",
+                  "ExitCode": 0,
+                  "Output": "/var/run/postgresql:5432 - accepting connections\n"
+                },
+                {
+                  "Start": "2026-11-15T21:36:23.737877416Z",
+                  "End": "2026-11-15T21:36:23.983491793Z",
+                  "ExitCode": 0,
+                  "Output": "/var/run/postgresql:5432 - accepting connections\n"
+                }
+              ]
+            }
+          },
+          "networks": {
+            "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+              "IPAMConfig": null,
+              "Links": null,
+              "Aliases": [
+                "infrasage-voting-phase2c-4db572e8bb-db-1",
+                "db"
+              ],
+              "DriverOpts": null,
+              "GwPriority": 0,
+              "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+              "EndpointID": "4acda25fec5da30c4c56dd39fde9d4a6f7580dbf6f44a3414099e03f0125f63c",
+              "Gateway": "",
+              "IPAddress": "172.18.0.2",
+              "MacAddress": "fe:0e:06:d5:05:e6",
+              "IPPrefixLen": 16,
+              "IPv6Gateway": "",
+              "GlobalIPv6Address": "",
+              "GlobalIPv6PrefixLen": 0,
+              "DNSNames": [
+                "infrasage-voting-phase2c-4db572e8bb-db-1",
+                "db",
+                "01140ad3ae7f"
+              ]
+            }
+          },
+          "ports": {
+            "5432/tcp": null
+          }
+        },
+        "redis": {
+          "id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+          "name": "infrasage-voting-phase2c-4db572e8bb-redis-1",
+          "image": "sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 33658,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-11-15T21:36:02.286716343Z",
+            "FinishedAt": "2026-11-15T21:35:57.636175555Z",
+            "Health": {
+              "Status": "healthy",
+              "FailingStreak": 0,
+              "Log": [
+                {
+                  "Start": "2026-11-15T21:36:13.873662479Z",
+                  "End": "2026-11-15T21:36:14.090660405Z",
+                  "ExitCode": 0,
+                  "Output": "PONG\n"
+                },
+                {
+                  "Start": "2026-11-15T21:36:16.093153107Z",
+                  "End": "2026-11-15T21:36:16.303166285Z",
+                  "ExitCode": 0,
+                  "Output": "PONG\n"
+                },
+                {
+                  "Start": "2026-11-15T21:36:18.305450215Z",
+                  "End": "2026-11-15T21:36:18.590177623Z",
+                  "ExitCode": 0,
+                  "Output": "PONG\n"
+                },
+                {
+                  "Start": "2026-11-15T21:36:20.593760159Z",
+                  "End": "2026-11-15T21:36:20.864237398Z",
+                  "ExitCode": 0,
+                  "Output": "PONG\n"
+                },
+                {
+                  "Start": "2026-11-15T21:36:22.867449248Z",
+                  "End": "2026-11-15T21:36:23.107514695Z",
+                  "ExitCode": 0,
+                  "Output": "PONG\n"
+                }
+              ]
+            }
+          },
+          "networks": {
+            "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+              "IPAMConfig": null,
+              "Links": null,
+              "Aliases": [
+                "infrasage-voting-phase2c-4db572e8bb-redis-1",
+                "redis"
+              ],
+              "DriverOpts": null,
+              "GwPriority": 0,
+              "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+              "EndpointID": "439b66edf418bab06577c4349096d859618158d608ea105a0e2475ee41c58fe9",
+              "Gateway": "",
+              "IPAddress": "172.19.0.2",
+              "MacAddress": "66:ae:05:49:19:58",
+              "IPPrefixLen": 16,
+              "IPv6Gateway": "",
+              "GlobalIPv6Address": "",
+              "GlobalIPv6PrefixLen": 0,
+              "DNSNames": [
+                "infrasage-voting-phase2c-4db572e8bb-redis-1",
+                "redis",
+                "0ac09d0840d6"
+              ]
+            }
+          },
+          "ports": {
+            "6379/tcp": null
+          }
+        },
+        "result": {
+          "id": "975d35d77c37172834e449933e28a72ef069b9697a567d1ada92a38db28651d1",
+          "name": "infrasage-voting-phase2c-4db572e8bb-result-1",
+          "image": "sha256:06c50992ab258e1d83406784040842bb920f6938eabac19261e7ec634f878935",
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 13961,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-11-15T21:25:13.792546999Z",
+            "FinishedAt": "2026-11-15T21:06:46.158654381Z"
+          },
+          "networks": {
+            "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+              "IPAMConfig": null,
+              "Links": null,
+              "Aliases": [
+                "infrasage-voting-phase2c-4db572e8bb-result-1",
+                "result"
+              ],
+              "DriverOpts": null,
+              "GwPriority": 0,
+              "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+              "EndpointID": "7e4e4ef13933cf483a455971fbfc1cf4f56de679cf5144974fb6a67e94707c19",
+              "Gateway": "",
+              "IPAddress": "172.18.0.3",
+              "MacAddress": "b6:b3:f1:4b:3f:a9",
+              "IPPrefixLen": 16,
+              "IPv6Gateway": "",
+              "GlobalIPv6Address": "",
+              "GlobalIPv6PrefixLen": 0,
+              "DNSNames": [
+                "infrasage-voting-phase2c-4db572e8bb-result-1",
+                "result",
+                "975d35d77c37"
+              ]
+            },
+            "infrasage-voting-phase2c-4db572e8bb_ui-tier": {
+              "IPAMConfig": null,
+              "Links": null,
+              "Aliases": [
+                "infrasage-voting-phase2c-4db572e8bb-result-1",
+                "result"
+              ],
+              "DriverOpts": null,
+              "GwPriority": 0,
+              "NetworkID": "2fe6eca773c6e6fa0eae144e1a595b07e45c3b6a843b66de3d30ed2ededac991",
+              "EndpointID": "3d955db8fb888e43cce7c2e6bff578f245399967e800e30efb86c7d4ae7eb253",
+              "Gateway": "172.20.0.1",
+              "IPAddress": "172.20.0.2",
+              "MacAddress": "42:88:70:1e:fc:03",
+              "IPPrefixLen": 16,
+              "IPv6Gateway": "",
+              "GlobalIPv6Address": "",
+              "GlobalIPv6PrefixLen": 0,
+              "DNSNames": [
+                "infrasage-voting-phase2c-4db572e8bb-result-1",
+                "result",
+                "975d35d77c37"
+              ]
+            }
+          },
+          "ports": {
+            "80/tcp": [
+              {
+                "HostIp": "127.0.0.1",
+                "HostPort": "32768"
+              }
+            ]
+          }
+        },
+        "vote": {
+          "id": "b32707e3a1d0255e94c04c8fa533cd3214688df21924a38eb38ea97eae161bff",
+          "name": "infrasage-voting-phase2c-4db572e8bb-vote-1",
+          "image": "sha256:7102d3b952ec84e3541ee12e7217e320c52aed60b13501c3158f46376a907466",
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 14153,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-11-15T21:25:14.999248772Z",
+            "FinishedAt": "2026-11-15T21:06:46.154247477Z"
+          },
+          "networks": {
+            "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+              "IPAMConfig": null,
+              "Links": null,
+              "Aliases": [
+                "infrasage-voting-phase2c-4db572e8bb-vote-1",
+                "vote"
+              ],
+              "DriverOpts": null,
+              "GwPriority": 0,
+              "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+              "EndpointID": "bec0d9c1bf37a1a746f3a86ffedc6b89a6b562757d0683032e85493a41621b2b",
+              "Gateway": "",
+              "IPAddress": "172.19.0.3",
+              "MacAddress": "a6:f8:1e:35:4a:2e",
+              "IPPrefixLen": 16,
+              "IPv6Gateway": "",
+              "GlobalIPv6Address": "",
+              "GlobalIPv6PrefixLen": 0,
+              "DNSNames": [
+                "infrasage-voting-phase2c-4db572e8bb-vote-1",
+                "vote",
+                "b32707e3a1d0"
+              ]
+            },
+            "infrasage-voting-phase2c-4db572e8bb_ui-tier": {
+              "IPAMConfig": null,
+              "Links": null,
+              "Aliases": [
+                "infrasage-voting-phase2c-4db572e8bb-vote-1",
+                "vote"
+              ],
+              "DriverOpts": null,
+              "GwPriority": 0,
+              "NetworkID": "2fe6eca773c6e6fa0eae144e1a595b07e45c3b6a843b66de3d30ed2ededac991",
+              "EndpointID": "94cd579286aeee2696f07a57d393070893e6852525f5f6b0abd05e430c57198a",
+              "Gateway": "172.20.0.1",
+              "IPAddress": "172.20.0.3",
+              "MacAddress": "0e:6f:a0:91:1e:93",
+              "IPPrefixLen": 16,
+              "IPv6Gateway": "",
+              "GlobalIPv6Address": "",
+              "GlobalIPv6PrefixLen": 0,
+              "DNSNames": [
+                "infrasage-voting-phase2c-4db572e8bb-vote-1",
+                "vote",
+                "b32707e3a1d0"
+              ]
+            }
+          },
+          "ports": {
+            "80/tcp": [
+              {
+                "HostIp": "127.0.0.1",
+                "HostPort": "32769"
+              }
+            ]
+          }
+        },
+        "worker": {
+          "id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+          "name": "infrasage-voting-phase2c-4db572e8bb-worker-1",
+          "image": "sha256:c8a8571065479c12567e8e440836e543d185c678cd4781a32b100f71e8f39c86",
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 35062,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-11-15T21:36:19.719067459Z",
+            "FinishedAt": "2026-11-15T21:36:19.418151807Z"
+          },
+          "networks": {
+            "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+              "IPAMConfig": null,
+              "Links": null,
+              "Aliases": [
+                "infrasage-voting-phase2c-4db572e8bb-worker-1",
+                "worker"
+              ],
+              "DriverOpts": null,
+              "GwPriority": 0,
+              "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+              "EndpointID": "b1c306a2ea2d71b747f1fcff868a19a40eca2861ceb7c704d909df52e668bcab",
+              "Gateway": "",
+              "IPAddress": "172.18.0.4",
+              "MacAddress": "7a:c6:27:84:6e:12",
+              "IPPrefixLen": 16,
+              "IPv6Gateway": "",
+              "GlobalIPv6Address": "",
+              "GlobalIPv6PrefixLen": 0,
+              "DNSNames": [
+                "infrasage-voting-phase2c-4db572e8bb-worker-1",
+                "worker",
+                "1f526879fba1"
+              ]
+            },
+            "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+              "IPAMConfig": null,
+              "Links": null,
+              "Aliases": [
+                "infrasage-voting-phase2c-4db572e8bb-worker-1",
+                "worker"
+              ],
+              "DriverOpts": null,
+              "GwPriority": 0,
+              "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+              "EndpointID": "7165d14214c556f660ab21d0669bd97cac629b105151dde1a68b322a48d462db",
+              "Gateway": "",
+              "IPAddress": "172.19.0.4",
+              "MacAddress": "d2:7c:99:04:3a:45",
+              "IPPrefixLen": 16,
+              "IPv6Gateway": "",
+              "GlobalIPv6Address": "",
+              "GlobalIPv6PrefixLen": 0,
+              "DNSNames": [
+                "infrasage-voting-phase2c-4db572e8bb-worker-1",
+                "worker",
+                "1f526879fba1"
+              ]
+            }
+          },
+          "ports": {}
+        }
+      },
+      "worker_logs": "2026-11-15T21:35:06.507310893Z Connecting to redis\n2026-11-15T21:35:07.550707301Z Processing vote for 'a' by 'phase2c-33e2f32ff4f74bdf807f284c799c3557'\n2026-11-15T21:35:45.212826594Z Processing vote for 'a' by 'phase2c-0eb1501262db43368a4419a7f66c921f'\n2026-11-15T21:35:55.664527763Z Processing vote for 'a' by 'phase2c-67db70456d244d1aac130c418f992bf8'\n2026-11-15T21:35:56.998574735Z Processing vote for 'a' by 'phase2c-32c2b9d6819d4a0297e4e559bab17f87'\n2026-11-15T21:35:57.790409391Z System.AggregateException: One or more errors occurred. (SocketFailure (ReadSocketError/ConnectionReset, last-recv: 5) on 172.19.0.2:6379/Interactive, Idle/Faulted, last: LPOP, origin: ReadFromPipe, outstanding: 1, last-read: 0s ago, last-write: 0s ago, unanswered-write: 0s ago, keep-alive: 60s, state: ConnectedEstablished, mgr: 8 of 10 available, in: 0, in-pipe: 0, out-pipe: 0, last-heartbeat: 0s ago, last-mbeat: 0s ago, global: 0s ago, v: 2.2.4.27433)\n2026-11-15T21:35:57.790496341Z  ---> StackExchange.Redis.RedisConnectionException: SocketFailure (ReadSocketError/ConnectionReset, last-recv: 5) on 172.19.0.2:6379/Interactive, Idle/Faulted, last: LPOP, origin: ReadFromPipe, outstanding: 1, last-read: 0s ago, last-write: 0s ago, unanswered-write: 0s ago, keep-alive: 60s, state: ConnectedEstablished, mgr: 8 of 10 available, in: 0, in-pipe: 0, out-pipe: 0, last-heartbeat: 0s ago, last-mbeat: 0s ago, global: 0s ago, v: 2.2.4.27433\n2026-11-15T21:35:57.790594439Z  ---> Pipelines.Sockets.Unofficial.ConnectionResetException: Connection reset by peer\n2026-11-15T21:35:57.790627996Z  ---> System.Net.Sockets.SocketException (104): Connection reset by peer\n2026-11-15T21:35:57.790728949Z    at Pipelines.Sockets.Unofficial.Internal.Throw.Socket(Int32 errorCode) in /_/src/Pipelines.Sockets.Unofficial/Internal/Throw.cs:line 59\n2026-11-15T21:35:57.790748370Z    at Pipelines.Sockets.Unofficial.SocketAwaitableEventArgs.GetResult() in /_/src/Pipelines.Sockets.Unofficial/SocketAwaitableEventArgs.cs:line 79\n2026-11-15T21:35:57.790762960Z    at Pipelines.Sockets.Unofficial.SocketConnection.DoReceiveAsync() in /_/src/Pipelines.Sockets.Unofficial/SocketConnection.Receive.cs:line 190\n2026-11-15T21:35:57.790928233Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.790952582Z    at System.IO.Pipelines.PipeCompletion.ThrowLatchedException()\n2026-11-15T21:35:57.790966739Z    at System.IO.Pipelines.Pipe.GetReadResult(ReadResult& result)\n2026-11-15T21:35:57.790980634Z    at System.IO.Pipelines.Pipe.GetReadAsyncResult()\n2026-11-15T21:35:57.791020199Z    at StackExchange.Redis.PhysicalConnection.ReadFromPipe() in /_/src/StackExchange.Redis/PhysicalConnection.cs:line 1550\n2026-11-15T21:35:57.791034973Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.791047749Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.791060460Z    at System.Threading.Tasks.Task`1.get_Result()\n2026-11-15T21:35:57.791094227Z    at Worker.Program.Main(String[] args) in /source/Program.cs:line 40\n2026-11-15T21:36:06.731960579Z Connected to db\n2026-11-15T21:36:06.753615227Z Found redis at 172.19.0.2\n2026-11-15T21:36:06.753619839Z Connecting to redis\n2026-11-15T21:36:07.629700415Z Processing vote for 'a' by 'phase2c-5c6ac1abebdc4c4b824f97a6adfb3a1d'\n2026-11-15T21:36:09.029389199Z Processing vote for 'a' by 'phase2c-e7d01fa4f2684e1dabbad650fd3993da'\n2026-11-15T21:36:22.739610853Z Connected to db\n2026-11-15T21:36:22.761061179Z Connecting to redis\n2026-11-15T21:36:22.761070543Z Found redis at 172.19.0.2\n2026-11-15T21:36:23.709321320Z Processing vote for 'a' by 'phase2c-36b9c9b1652a497f9ce1bdf6a1404aea'\n"
+    }
+  },
+  "injection": {
+    "method": "Redis CONFIG SET port 0 over owned Unix socket",
+    "process_running": true,
+    "tcp_port": 0
+  },
+  "state_during_fault": {
+    "captured_at": "2026-11-15T21:36:10.141316+00:00",
+    "services": {
+      "db": {
+        "id": "01140ad3ae7f5aef78ed6fc8b39d60f9f7bc7ae167d7d22c89312abf001c81d6",
+        "name": "infrasage-voting-phase2c-4db572e8bb-db-1",
+        "image": "sha256:fc41cfa8a90c09e84dd723ee764be4b2f59ba6c98b1e5b3fca540adddf68a5ba",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 13600,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:25:10.104653693Z",
+          "FinishedAt": "2026-11-15T21:06:46.162497333Z",
+          "Health": {
+            "Status": "healthy",
+            "FailingStreak": 0,
+            "Log": [
+              {
+                "Start": "2026-11-15T21:35:58.752481752Z",
+                "End": "2026-11-15T21:35:59.080883783Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:01.084654327Z",
+                "End": "2026-11-15T21:36:01.340669897Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:03.34361955Z",
+                "End": "2026-11-15T21:36:03.618740948Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:05.62186097Z",
+                "End": "2026-11-15T21:36:05.978535228Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:07.980535609Z",
+                "End": "2026-11-15T21:36:08.245954207Z",
+                "ExitCode": 0,
+                "Output": "/var/run/postgresql:5432 - accepting connections\n"
+              }
+            ]
+          }
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-db-1",
+              "db"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+            "EndpointID": "4acda25fec5da30c4c56dd39fde9d4a6f7580dbf6f44a3414099e03f0125f63c",
+            "Gateway": "",
+            "IPAddress": "172.18.0.2",
+            "MacAddress": "fe:0e:06:d5:05:e6",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-db-1",
+              "db",
+              "01140ad3ae7f"
+            ]
+          }
+        },
+        "ports": {
+          "5432/tcp": null
+        }
+      },
+      "redis": {
+        "id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+        "name": "infrasage-voting-phase2c-4db572e8bb-redis-1",
+        "image": "sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 33658,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:36:02.286716343Z",
+          "FinishedAt": "2026-11-15T21:35:57.636175555Z",
+          "Health": {
+            "Status": "healthy",
+            "FailingStreak": 0,
+            "Log": [
+              {
+                "Start": "2026-11-15T21:35:53.760789996Z",
+                "End": "2026-11-15T21:35:53.945928315Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              },
+              {
+                "Start": "2026-11-15T21:35:55.947525969Z",
+                "End": "2026-11-15T21:35:56.219906899Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:04.89686477Z",
+                "End": "2026-11-15T21:36:05.143435667Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:07.145800439Z",
+                "End": "2026-11-15T21:36:07.347780918Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              },
+              {
+                "Start": "2026-11-15T21:36:09.349412106Z",
+                "End": "2026-11-15T21:36:09.640340475Z",
+                "ExitCode": 0,
+                "Output": "PONG\n"
+              }
+            ]
+          }
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-redis-1",
+              "redis"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+            "EndpointID": "439b66edf418bab06577c4349096d859618158d608ea105a0e2475ee41c58fe9",
+            "Gateway": "",
+            "IPAddress": "172.19.0.2",
+            "MacAddress": "66:ae:05:49:19:58",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-redis-1",
+              "redis",
+              "0ac09d0840d6"
+            ]
+          }
+        },
+        "ports": {
+          "6379/tcp": null
+        }
+      },
+      "result": {
+        "id": "975d35d77c37172834e449933e28a72ef069b9697a567d1ada92a38db28651d1",
+        "name": "infrasage-voting-phase2c-4db572e8bb-result-1",
+        "image": "sha256:06c50992ab258e1d83406784040842bb920f6938eabac19261e7ec634f878935",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 13961,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:25:13.792546999Z",
+          "FinishedAt": "2026-11-15T21:06:46.158654381Z"
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-result-1",
+              "result"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+            "EndpointID": "7e4e4ef13933cf483a455971fbfc1cf4f56de679cf5144974fb6a67e94707c19",
+            "Gateway": "",
+            "IPAddress": "172.18.0.3",
+            "MacAddress": "b6:b3:f1:4b:3f:a9",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-result-1",
+              "result",
+              "975d35d77c37"
+            ]
+          },
+          "infrasage-voting-phase2c-4db572e8bb_ui-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-result-1",
+              "result"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "2fe6eca773c6e6fa0eae144e1a595b07e45c3b6a843b66de3d30ed2ededac991",
+            "EndpointID": "3d955db8fb888e43cce7c2e6bff578f245399967e800e30efb86c7d4ae7eb253",
+            "Gateway": "172.20.0.1",
+            "IPAddress": "172.20.0.2",
+            "MacAddress": "42:88:70:1e:fc:03",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-result-1",
+              "result",
+              "975d35d77c37"
+            ]
+          }
+        },
+        "ports": {
+          "80/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "32768"
+            }
+          ]
+        }
+      },
+      "vote": {
+        "id": "b32707e3a1d0255e94c04c8fa533cd3214688df21924a38eb38ea97eae161bff",
+        "name": "infrasage-voting-phase2c-4db572e8bb-vote-1",
+        "image": "sha256:7102d3b952ec84e3541ee12e7217e320c52aed60b13501c3158f46376a907466",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 14153,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:25:14.999248772Z",
+          "FinishedAt": "2026-11-15T21:06:46.154247477Z"
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-vote-1",
+              "vote"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+            "EndpointID": "bec0d9c1bf37a1a746f3a86ffedc6b89a6b562757d0683032e85493a41621b2b",
+            "Gateway": "",
+            "IPAddress": "172.19.0.3",
+            "MacAddress": "a6:f8:1e:35:4a:2e",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-vote-1",
+              "vote",
+              "b32707e3a1d0"
+            ]
+          },
+          "infrasage-voting-phase2c-4db572e8bb_ui-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-vote-1",
+              "vote"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "2fe6eca773c6e6fa0eae144e1a595b07e45c3b6a843b66de3d30ed2ededac991",
+            "EndpointID": "94cd579286aeee2696f07a57d393070893e6852525f5f6b0abd05e430c57198a",
+            "Gateway": "172.20.0.1",
+            "IPAddress": "172.20.0.3",
+            "MacAddress": "0e:6f:a0:91:1e:93",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-vote-1",
+              "vote",
+              "b32707e3a1d0"
+            ]
+          }
+        },
+        "ports": {
+          "80/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "32769"
+            }
+          ]
+        }
+      },
+      "worker": {
+        "id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+        "name": "infrasage-voting-phase2c-4db572e8bb-worker-1",
+        "image": "sha256:c8a8571065479c12567e8e440836e543d185c678cd4781a32b100f71e8f39c86",
+        "state": {
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 33873,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-15T21:36:03.569359763Z",
+          "FinishedAt": "2026-11-15T21:35:57.909430417Z"
+        },
+        "networks": {
+          "infrasage-voting-phase2c-4db572e8bb_db-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "worker"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "0f3203d2ecd0430030d0f19b0c0d1713c2eb5083e147c98dac7ab849122fb86a",
+            "EndpointID": "25e0b8359768ccd235fed4697158f7627d83c86b3f9a5e80d0a97798a267eaa9",
+            "Gateway": "",
+            "IPAddress": "172.18.0.4",
+            "MacAddress": "6e:d0:d8:2d:ef:af",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "worker",
+              "1f526879fba1"
+            ]
+          },
+          "infrasage-voting-phase2c-4db572e8bb_redis-tier": {
+            "IPAMConfig": null,
+            "Links": null,
+            "Aliases": [
+              "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "worker"
+            ],
+            "DriverOpts": null,
+            "GwPriority": 0,
+            "NetworkID": "a0f38d74f9bba8925d95300a8b0bef2c6fdb6545299ea01ccc4dc1c7e4d9ee1d",
+            "EndpointID": "cdbb255a60456bfa5f26f7f99f6a58e3d90406a7e87da979bbf8459e55a41d4f",
+            "Gateway": "",
+            "IPAddress": "172.19.0.4",
+            "MacAddress": "86:da:9a:f1:f6:36",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "DNSNames": [
+              "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "worker",
+              "1f526879fba1"
+            ]
+          }
+        },
+        "ports": {}
+      }
+    },
+    "worker_logs": "2026-11-15T21:34:58.612349167Z    at System.Threading.Tasks.Task`1.get_Result()\n2026-11-15T21:34:58.612366543Z    at Worker.Program.Main(String[] args) in /source/Program.cs:line 40\n2026-11-15T21:35:06.470982114Z Connected to db\n2026-11-15T21:35:06.507256909Z Found redis at 172.19.0.2\n2026-11-15T21:35:06.507310893Z Connecting to redis\n2026-11-15T21:35:07.550707301Z Processing vote for 'a' by 'phase2c-33e2f32ff4f74bdf807f284c799c3557'\n2026-11-15T21:35:45.212826594Z Processing vote for 'a' by 'phase2c-0eb1501262db43368a4419a7f66c921f'\n2026-11-15T21:35:55.664527763Z Processing vote for 'a' by 'phase2c-67db70456d244d1aac130c418f992bf8'\n2026-11-15T21:35:56.998574735Z Processing vote for 'a' by 'phase2c-32c2b9d6819d4a0297e4e559bab17f87'\n2026-11-15T21:35:57.790409391Z System.AggregateException: One or more errors occurred. (SocketFailure (ReadSocketError/ConnectionReset, last-recv: 5) on 172.19.0.2:6379/Interactive, Idle/Faulted, last: LPOP, origin: ReadFromPipe, outstanding: 1, last-read: 0s ago, last-write: 0s ago, unanswered-write: 0s ago, keep-alive: 60s, state: ConnectedEstablished, mgr: 8 of 10 available, in: 0, in-pipe: 0, out-pipe: 0, last-heartbeat: 0s ago, last-mbeat: 0s ago, global: 0s ago, v: 2.2.4.27433)\n2026-11-15T21:35:57.790496341Z  ---> StackExchange.Redis.RedisConnectionException: SocketFailure (ReadSocketError/ConnectionReset, last-recv: 5) on 172.19.0.2:6379/Interactive, Idle/Faulted, last: LPOP, origin: ReadFromPipe, outstanding: 1, last-read: 0s ago, last-write: 0s ago, unanswered-write: 0s ago, keep-alive: 60s, state: ConnectedEstablished, mgr: 8 of 10 available, in: 0, in-pipe: 0, out-pipe: 0, last-heartbeat: 0s ago, last-mbeat: 0s ago, global: 0s ago, v: 2.2.4.27433\n2026-11-15T21:35:57.790594439Z  ---> Pipelines.Sockets.Unofficial.ConnectionResetException: Connection reset by peer\n2026-11-15T21:35:57.790627996Z  ---> System.Net.Sockets.SocketException (104): Connection reset by peer\n2026-11-15T21:35:57.790728949Z    at Pipelines.Sockets.Unofficial.Internal.Throw.Socket(Int32 errorCode) in /_/src/Pipelines.Sockets.Unofficial/Internal/Throw.cs:line 59\n2026-11-15T21:35:57.790748370Z    at Pipelines.Sockets.Unofficial.SocketAwaitableEventArgs.GetResult() in /_/src/Pipelines.Sockets.Unofficial/SocketAwaitableEventArgs.cs:line 79\n2026-11-15T21:35:57.790762960Z    at Pipelines.Sockets.Unofficial.SocketConnection.DoReceiveAsync() in /_/src/Pipelines.Sockets.Unofficial/SocketConnection.Receive.cs:line 190\n2026-11-15T21:35:57.790928233Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.790952582Z    at System.IO.Pipelines.PipeCompletion.ThrowLatchedException()\n2026-11-15T21:35:57.790966739Z    at System.IO.Pipelines.Pipe.GetReadResult(ReadResult& result)\n2026-11-15T21:35:57.790980634Z    at System.IO.Pipelines.Pipe.GetReadAsyncResult()\n2026-11-15T21:35:57.791020199Z    at StackExchange.Redis.PhysicalConnection.ReadFromPipe() in /_/src/StackExchange.Redis/PhysicalConnection.cs:line 1550\n2026-11-15T21:35:57.791034973Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.791047749Z    --- End of inner exception stack trace ---\n2026-11-15T21:35:57.791060460Z    at System.Threading.Tasks.Task`1.get_Result()\n2026-11-15T21:35:57.791094227Z    at Worker.Program.Main(String[] args) in /source/Program.cs:line 40\n2026-11-15T21:36:06.731960579Z Connected to db\n2026-11-15T21:36:06.753615227Z Found redis at 172.19.0.2\n2026-11-15T21:36:06.753619839Z Connecting to redis\n2026-11-15T21:36:07.629700415Z Processing vote for 'a' by 'phase2c-5c6ac1abebdc4c4b824f97a6adfb3a1d'\n2026-11-15T21:36:09.029389199Z Processing vote for 'a' by 'phase2c-e7d01fa4f2684e1dabbad650fd3993da'\n"
+  },
+  "model": {
+    "model_id": "voting-app-synthetic-bootstrap",
+    "version": "0.1.0",
+    "status": "synthetic_provisional_not_calibrated"
+  },
+  "investigation": {
+    "result": {
+      "decision": "ABSTAIN",
+      "reason": "maximum test count reached",
+      "diagnosed_hypothesis": null,
+      "final_beliefs": {
+        "redis_process_stopped": 0.04811599284058962,
+        "redis_service_degraded": 0.032932724131221856,
+        "worker_process_stopped": 0.05081048849668322,
+        "postgres_process_stopped": 0.05081048849668322,
+        "postgres_connection_saturation": 0.03387365918785769,
+        "worker_redis_network_failure": 0.032932724131221856,
+        "worker_postgres_network_failure": 0.039519268957466235,
+        "worker_redis_endpoint_wrong": 0.4234207327206388,
+        "worker_postgres_endpoint_wrong": 0.028228048848042586,
+        "host_cpu_saturation": 0.03387365918785769,
+        "host_memory_pressure": 0.03387365918785769,
+        "host_disk_pressure": 0.028228048848042586,
+        "vote_frontend_unavailable": 0.028228048848042586,
+        "result_frontend_unavailable": 0.028228048848042586,
+        "other_unknown": 0.10692440726975184
+      },
+      "belief_history": [
+        {
+          "probabilities": {
+            "redis_process_stopped": 0.099009901,
+            "redis_service_degraded": 0.069306931,
+            "worker_process_stopped": 0.089108911,
+            "postgres_process_stopped": 0.089108911,
+            "postgres_connection_saturation": 0.059405941,
+            "worker_redis_network_failure": 0.069306931,
+            "worker_postgres_network_failure": 0.069306931,
+            "worker_redis_endpoint_wrong": 0.04950495,
+            "worker_postgres_endpoint_wrong": 0.04950495,
+            "host_cpu_saturation": 0.059405941,
+            "host_memory_pressure": 0.059405941,
+            "host_disk_pressure": 0.04950495,
+            "vote_frontend_unavailable": 0.04950495,
+            "result_frontend_unavailable": 0.04950495,
+            "other_unknown": 0.089108911
+          }
+        },
+        {
+          "probabilities": {
+            "redis_process_stopped": 0.0066085117906129805,
+            "redis_service_degraded": 0.0814168656127706,
+            "worker_process_stopped": 0.10467882688078246,
+            "postgres_process_stopped": 0.10467882688078246,
+            "postgres_connection_saturation": 0.06978588497876465,
+            "worker_redis_network_failure": 0.0814168656127706,
+            "worker_postgres_network_failure": 0.0814168656127706,
+            "worker_redis_endpoint_wrong": 0.058154903170029665,
+            "worker_postgres_endpoint_wrong": 0.058154903170029665,
+            "host_cpu_saturation": 0.06978588497876465,
+            "host_memory_pressure": 0.06978588497876465,
+            "host_disk_pressure": 0.058154903170029665,
+            "vote_frontend_unavailable": 0.058154903170029665,
+            "result_frontend_unavailable": 0.058154903170029665,
+            "other_unknown": 0.03965106682306809
+          }
+        },
+        {
+          "probabilities": {
+            "redis_process_stopped": 0.04811599284058962,
+            "redis_service_degraded": 0.032932724131221856,
+            "worker_process_stopped": 0.05081048849668322,
+            "postgres_process_stopped": 0.05081048849668322,
+            "postgres_connection_saturation": 0.03387365918785769,
+            "worker_redis_network_failure": 0.032932724131221856,
+            "worker_postgres_network_failure": 0.039519268957466235,
+            "worker_redis_endpoint_wrong": 0.4234207327206388,
+            "worker_postgres_endpoint_wrong": 0.028228048848042586,
+            "host_cpu_saturation": 0.03387365918785769,
+            "host_memory_pressure": 0.03387365918785769,
+            "host_disk_pressure": 0.028228048848042586,
+            "vote_frontend_unavailable": 0.028228048848042586,
+            "result_frontend_unavailable": 0.028228048848042586,
+            "other_unknown": 0.10692440726975184
+          }
+        }
+      ],
+      "observations": [
+        {
+          "test_identifier": "redis_runtime_state",
+          "target_identifier": "docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+          "execution_status": "completed",
+          "observed_outcome": "running",
+          "duration_seconds": 0.007176649000030011,
+          "measured_energy_joules": null,
+          "timestamp": "2026-11-15 21:36:13.399099+00:00"
+        },
+        {
+          "test_identifier": "worker_redis_connectivity",
+          "target_identifier": "docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+          "execution_status": "completed",
+          "observed_outcome": "refused",
+          "duration_seconds": 5.15378522900005,
+          "measured_energy_joules": null,
+          "timestamp": "2026-11-15 21:36:18.117824+00:00"
+        }
+      ],
+      "selections": [
+        {
+          "test": {
+            "identifier": "redis_runtime_state",
+            "outcomes": [
+              "running",
+              "stopped",
+              "restarting"
+            ],
+            "likelihoods": {
+              "redis_process_stopped": {
+                "running": 0.05,
+                "stopped": 0.9,
+                "restarting": 0.05
+              },
+              "redis_service_degraded": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "worker_process_stopped": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "postgres_process_stopped": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "postgres_connection_saturation": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "worker_redis_network_failure": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "worker_postgres_network_failure": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "worker_redis_endpoint_wrong": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "worker_postgres_endpoint_wrong": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "host_cpu_saturation": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "host_memory_pressure": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "host_disk_pressure": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "vote_frontend_unavailable": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "result_frontend_unavailable": {
+                "running": 0.88,
+                "stopped": 0.06,
+                "restarting": 0.06
+              },
+              "other_unknown": {
+                "running": 0.3333333,
+                "stopped": 0.3333333,
+                "restarting": 0.3333334
+              }
+            },
+            "expected_energy_joules": 0.1,
+            "expected_latency_seconds": 0.12,
+            "description": "Docker container/process state, via verified Netdata capability or Docker fallback"
+          },
+          "score": 3.1804039003131557,
+          "information_gain_bits": 0.31804039003131557,
+          "expected_energy_joules": 0.1,
+          "expected_latency_seconds": 0.12,
+          "policy": "ratio",
+          "zero_cost_priority": false
+        },
+        {
+          "test": {
+            "identifier": "worker_redis_connectivity",
+            "outcomes": [
+              "connected",
+              "refused",
+              "timeout"
+            ],
+            "likelihoods": {
+              "redis_process_stopped": {
+                "connected": 0.05,
+                "refused": 0.9,
+                "timeout": 0.05
+              },
+              "redis_service_degraded": {
+                "connected": 0.05,
+                "refused": 0.05,
+                "timeout": 0.9
+              },
+              "worker_process_stopped": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "postgres_process_stopped": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "postgres_connection_saturation": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "worker_redis_network_failure": {
+                "connected": 0.05,
+                "refused": 0.05,
+                "timeout": 0.9
+              },
+              "worker_postgres_network_failure": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "worker_redis_endpoint_wrong": {
+                "connected": 0.05,
+                "refused": 0.9,
+                "timeout": 0.05
+              },
+              "worker_postgres_endpoint_wrong": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "host_cpu_saturation": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "host_memory_pressure": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "host_disk_pressure": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "vote_frontend_unavailable": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "result_frontend_unavailable": {
+                "connected": 0.88,
+                "refused": 0.06,
+                "timeout": 0.06
+              },
+              "other_unknown": {
+                "connected": 0.3333333,
+                "refused": 0.3333333,
+                "timeout": 0.3333334
+              }
+            },
+            "expected_energy_joules": 0.45,
+            "expected_latency_seconds": 0.25,
+            "description": "Connectivity tested specifically from worker context to Redis"
+          },
+          "score": 1.250234929129875,
+          "information_gain_bits": 0.5626057181084438,
+          "expected_energy_joules": 0.45,
+          "expected_latency_seconds": 0.25,
+          "policy": "ratio",
+          "zero_cost_priority": false
+        }
+      ],
+      "total_estimated_energy_joules": 0.55,
+      "total_estimated_latency_seconds": 0.37
+    },
+    "trace": [
+      {
+        "event": "started",
+        "timestamp": "2026-11-15T21:36:13.361892+00:00",
+        "elapsed_seconds": 0.00012039600005664397,
+        "initial_probabilities": {
+          "redis_process_stopped": 0.099009901,
+          "redis_service_degraded": 0.069306931,
+          "worker_process_stopped": 0.089108911,
+          "postgres_process_stopped": 0.089108911,
+          "postgres_connection_saturation": 0.059405941,
+          "worker_redis_network_failure": 0.069306931,
+          "worker_postgres_network_failure": 0.069306931,
+          "worker_redis_endpoint_wrong": 0.04950495,
+          "worker_postgres_endpoint_wrong": 0.04950495,
+          "host_cpu_saturation": 0.059405941,
+          "host_memory_pressure": 0.059405941,
+          "host_disk_pressure": 0.04950495,
+          "vote_frontend_unavailable": 0.04950495,
+          "result_frontend_unavailable": 0.04950495,
+          "other_unknown": 0.089108911
+        },
+        "mode": "research/bootstrap: provisional probabilities and estimated costs, not calibrated diagnosis",
+        "conditional_independence_assumption": "Distinct admitted evidence groups are still assumed conditionally independent given cause"
+      },
+      {
+        "event": "eligibility",
+        "timestamp": "2026-11-15T21:36:13.362541+00:00",
+        "elapsed_seconds": 0.0007524709999415791,
+        "eligible_tests": [
+          "redis_runtime_state",
+          "worker_redis_connectivity"
+        ],
+        "excluded_tests": {},
+        "affordable_tests": [
+          "redis_runtime_state",
+          "worker_redis_connectivity"
+        ],
+        "remaining_estimated_energy_joules": 1.0,
+        "remaining_seconds": 29.99987094900007
+      },
+      {
+        "event": "selected",
+        "timestamp": "2026-11-15T21:36:13.366052+00:00",
+        "elapsed_seconds": 0.004265135999958147,
+        "test_id": "redis_runtime_state",
+        "information_gain_bits": 0.31804039003131557,
+        "policy": "ratio",
+        "policy_score": 3.1804039003131557,
+        "expected_energy_joules": 0.1,
+        "expected_latency_seconds": 0.12,
+        "target": {
+          "container_id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1"
+        }
+      },
+      {
+        "event": "action",
+        "timestamp": "2026-11-15T21:36:13.399514+00:00",
+        "elapsed_seconds": 0.03771571600009338,
+        "test_id": "redis_runtime_state",
+        "execution_status": "completed",
+        "phase": "binding_verification_with_evidence",
+        "accounting": "one charged attempt; verification evidence consumed without another execution"
+      },
+      {
+        "event": "observation",
+        "timestamp": "2026-11-15T21:36:13.400479+00:00",
+        "elapsed_seconds": 0.038681534000033935,
+        "test_id": "redis_runtime_state",
+        "observation": {
+          "test_identifier": "redis_runtime_state",
+          "target_identifier": "docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+          "execution_status": "completed",
+          "observed_outcome": "running",
+          "duration_seconds": 0.007176649000030011,
+          "measured_energy_joules": null,
+          "timestamp": "2026-11-15 21:36:13.399099+00:00"
+        },
+        "admitted": true,
+        "reason": "validated unique evidence",
+        "provenance": {
+          "execution_result": {
+            "source": "docker",
+            "status": "completed",
+            "data": {
+              "id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+              "name": "infrasage-voting-phase2c-4db572e8bb-redis-1",
+              "status": "running",
+              "running": true,
+              "restarting": false,
+              "paused": false,
+              "dead": false,
+              "exit_code": 0,
+              "state_error": "",
+              "started_at": "2026-11-15T21:36:02.286716343Z",
+              "finished_at": "2026-11-15T21:35:57.636175555Z",
+              "image": "sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe"
+            },
+            "target": {
+              "container_id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+              "container_name": "infrasage-voting-phase2c-4db572e8bb-redis-1"
+            },
+            "observed_at": "2026-11-15T21:36:13.399099+00:00",
+            "retrieved_at": "2026-11-15T21:36:13.399155+00:00",
+            "docker_endpoint": "http+docker://localhost",
+            "target_identifier": "docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+            "duration_seconds": 0.007176649000030011,
+            "test_id": "redis_runtime_state",
+            "binding": {
+              "provider": "docker",
+              "operation": "container_process_state",
+              "container_id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+              "container_name": "infrasage-voting-phase2c-4db572e8bb-redis-1",
+              "verified_at": "2026-11-15T21:36:13.399099+00:00",
+              "docker_endpoint": "http+docker://localhost",
+              "freshness_max_seconds": 15
+            },
+            "verification_scope": "process-local research only",
+            "diagnostic_actions": 1,
+            "action_phase": "binding_verification_with_evidence",
+            "evidence_from_verification": true,
+            "action_duration_seconds": 0.033350530000006984
+          },
+          "source": "docker",
+          "retrieved_at": "2026-11-15T21:36:13.399565+00:00",
+          "measurement_timestamp": "2026-11-15T21:36:13.399099+00:00",
+          "observation_timestamp_role": "measurement_sample",
+          "identity_verified": true,
+          "reason": "validated_runtime_observation"
+        }
+      },
+      {
+        "event": "posterior",
+        "timestamp": "2026-11-15T21:36:13.400509+00:00",
+        "elapsed_seconds": 0.038704865999989124,
+        "probabilities": {
+          "redis_process_stopped": 0.0066085117906129805,
+          "redis_service_degraded": 0.0814168656127706,
+          "worker_process_stopped": 0.10467882688078246,
+          "postgres_process_stopped": 0.10467882688078246,
+          "postgres_connection_saturation": 0.06978588497876465,
+          "worker_redis_network_failure": 0.0814168656127706,
+          "worker_postgres_network_failure": 0.0814168656127706,
+          "worker_redis_endpoint_wrong": 0.058154903170029665,
+          "worker_postgres_endpoint_wrong": 0.058154903170029665,
+          "host_cpu_saturation": 0.06978588497876465,
+          "host_memory_pressure": 0.06978588497876465,
+          "host_disk_pressure": 0.058154903170029665,
+          "vote_frontend_unavailable": 0.058154903170029665,
+          "result_frontend_unavailable": 0.058154903170029665,
+          "other_unknown": 0.03965106682306809
+        },
+        "attempted_tests": [
+          "redis_runtime_state"
+        ],
+        "completed_tests": [
+          "redis_runtime_state"
+        ],
+        "remaining_candidates": [
+          "worker_redis_connectivity"
+        ],
+        "total_estimated_energy_joules": 0.1,
+        "total_estimated_latency_seconds": 0.12
+      },
+      {
+        "event": "eligibility",
+        "timestamp": "2026-11-15T21:36:13.400729+00:00",
+        "elapsed_seconds": 0.03893290400014848,
+        "eligible_tests": [
+          "worker_redis_connectivity"
+        ],
+        "excluded_tests": {
+          "redis_runtime_state": "already attempted or consumed as initial evidence"
+        },
+        "affordable_tests": [
+          "worker_redis_connectivity"
+        ],
+        "remaining_estimated_energy_joules": 0.9,
+        "remaining_seconds": 29.961288749000005
+      },
+      {
+        "event": "selected",
+        "timestamp": "2026-11-15T21:36:13.402631+00:00",
+        "elapsed_seconds": 0.04084988199997497,
+        "test_id": "worker_redis_connectivity",
+        "information_gain_bits": 0.5626057181084438,
+        "policy": "ratio",
+        "policy_score": 1.250234929129875,
+        "expected_energy_joules": 0.45,
+        "expected_latency_seconds": 0.25,
+        "target": {
+          "container_id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31"
+        }
+      },
+      {
+        "event": "action",
+        "timestamp": "2026-11-15T21:36:18.557395+00:00",
+        "elapsed_seconds": 5.195600596000077,
+        "test_id": "worker_redis_connectivity",
+        "execution_status": "completed",
+        "phase": "binding_verification_with_evidence",
+        "accounting": "one charged attempt; verification evidence consumed without another execution"
+      },
+      {
+        "event": "observation",
+        "timestamp": "2026-11-15T21:36:18.558846+00:00",
+        "elapsed_seconds": 5.197065538000061,
+        "test_id": "worker_redis_connectivity",
+        "observation": {
+          "test_identifier": "worker_redis_connectivity",
+          "target_identifier": "docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+          "execution_status": "completed",
+          "observed_outcome": "refused",
+          "duration_seconds": 5.15378522900005,
+          "measured_energy_joules": null,
+          "timestamp": "2026-11-15 21:36:18.117824+00:00"
+        },
+        "admitted": true,
+        "reason": "validated unique evidence",
+        "provenance": {
+          "execution_result": {
+            "source": "docker",
+            "status": "completed",
+            "data": {
+              "id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+              "name": "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "outcome": "refused",
+              "endpoint": {
+                "host": "172.19.0.2",
+                "port": 6379
+              }
+            },
+            "observed_at": "2026-11-15T21:36:18.117824+00:00",
+            "probe_config": {
+              "redis_host": "172.19.0.2",
+              "redis_port": 6379,
+              "connection_timeout": 1.0,
+              "execution_deadline": 8.0,
+              "helper_image": "sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32"
+            },
+            "docker_endpoint": "http+docker://localhost",
+            "helper_name": "infrasage-tcp-fd1c2d5a5e10419787f7956c4b5c29c6",
+            "measured_energy_joules": null,
+            "target": {
+              "container_id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+              "container_name": "infrasage-voting-phase2c-4db572e8bb-worker-1"
+            },
+            "target_identifier": "docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+            "request_id": "277f449e759b4d648189358eed5a63bf",
+            "helper_id": "60fd644255583022ec5a10df469c7f8f1aedf62794c671394b588a7706f53f75",
+            "probe_result": {
+              "protocol": "infrasage-tcp-v1",
+              "request_id": "277f449e759b4d648189358eed5a63bf",
+              "worker_id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+              "endpoint": {
+                "host": "172.19.0.2",
+                "port": 6379
+              },
+              "status": "completed",
+              "outcome": "refused",
+              "observed_at": "2026-11-15T21:36:18.117824+00:00"
+            },
+            "namespace": "container:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+            "helper_image": "sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32",
+            "helper_removed": true,
+            "retrieved_at": "2026-11-15T21:36:18.556864+00:00",
+            "duration_seconds": 5.15378522900005,
+            "test_id": "worker_redis_connectivity",
+            "binding": {
+              "provider": "docker",
+              "operation": "worker_to_redis_tcp",
+              "container_id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+              "container_name": "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "redis_host": "172.19.0.2",
+              "redis_port": 6379,
+              "connection_timeout": 1.0,
+              "execution_deadline": 8.0,
+              "helper_image": "sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32",
+              "docker_endpoint": "http+docker://localhost",
+              "verified_at": "2026-11-15T21:36:18.117824+00:00",
+              "freshness_max_seconds": 15
+            },
+            "verification_scope": "process-local research only",
+            "diagnostic_actions": 1,
+            "action_phase": "binding_verification_with_evidence",
+            "evidence_from_verification": true,
+            "action_duration_seconds": 5.154464868000105
+          },
+          "source": "docker",
+          "retrieved_at": "2026-11-15T21:36:18.557452+00:00",
+          "measurement_timestamp": "2026-11-15T21:36:18.117824+00:00",
+          "observation_timestamp_role": "measurement_sample",
+          "identity_verified": true,
+          "reason": "validated_runtime_observation"
+        }
+      },
+      {
+        "event": "posterior",
+        "timestamp": "2026-11-15T21:36:18.558906+00:00",
+        "elapsed_seconds": 5.197115510000003,
+        "probabilities": {
+          "redis_process_stopped": 0.04811599284058962,
+          "redis_service_degraded": 0.032932724131221856,
+          "worker_process_stopped": 0.05081048849668322,
+          "postgres_process_stopped": 0.05081048849668322,
+          "postgres_connection_saturation": 0.03387365918785769,
+          "worker_redis_network_failure": 0.032932724131221856,
+          "worker_postgres_network_failure": 0.039519268957466235,
+          "worker_redis_endpoint_wrong": 0.4234207327206388,
+          "worker_postgres_endpoint_wrong": 0.028228048848042586,
+          "host_cpu_saturation": 0.03387365918785769,
+          "host_memory_pressure": 0.03387365918785769,
+          "host_disk_pressure": 0.028228048848042586,
+          "vote_frontend_unavailable": 0.028228048848042586,
+          "result_frontend_unavailable": 0.028228048848042586,
+          "other_unknown": 0.10692440726975184
+        },
+        "attempted_tests": [
+          "redis_runtime_state",
+          "worker_redis_connectivity"
+        ],
+        "completed_tests": [
+          "redis_runtime_state",
+          "worker_redis_connectivity"
+        ],
+        "remaining_candidates": [],
+        "total_estimated_energy_joules": 0.55,
+        "total_estimated_latency_seconds": 0.37
+      },
+      {
+        "event": "eligibility",
+        "timestamp": "2026-11-15T21:36:18.558959+00:00",
+        "elapsed_seconds": 5.197163015000115,
+        "eligible_tests": [],
+        "excluded_tests": {
+          "redis_runtime_state": "already attempted or consumed as initial evidence",
+          "worker_redis_connectivity": "already attempted or consumed as initial evidence"
+        },
+        "affordable_tests": [],
+        "remaining_estimated_energy_joules": 0.44999999999999996,
+        "remaining_seconds": 24.802876309999874
+      },
+      {
+        "event": "stopped",
+        "timestamp": "2026-11-15T21:36:18.559144+00:00",
+        "elapsed_seconds": 5.197351975999936,
+        "decision": "ABSTAIN",
+        "reason": "maximum test count reached",
+        "diagnosed_hypothesis": null,
+        "final_probabilities": {
+          "redis_process_stopped": 0.04811599284058962,
+          "redis_service_degraded": 0.032932724131221856,
+          "worker_process_stopped": 0.05081048849668322,
+          "postgres_process_stopped": 0.05081048849668322,
+          "postgres_connection_saturation": 0.03387365918785769,
+          "worker_redis_network_failure": 0.032932724131221856,
+          "worker_postgres_network_failure": 0.039519268957466235,
+          "worker_redis_endpoint_wrong": 0.4234207327206388,
+          "worker_postgres_endpoint_wrong": 0.028228048848042586,
+          "host_cpu_saturation": 0.03387365918785769,
+          "host_memory_pressure": 0.03387365918785769,
+          "host_disk_pressure": 0.028228048848042586,
+          "vote_frontend_unavailable": 0.028228048848042586,
+          "result_frontend_unavailable": 0.028228048848042586,
+          "other_unknown": 0.10692440726975184
+        },
+        "selected_tests": [
+          "redis_runtime_state",
+          "worker_redis_connectivity"
+        ],
+        "attempted_tests": [
+          "redis_runtime_state",
+          "worker_redis_connectivity"
+        ],
+        "completed_tests": [
+          "redis_runtime_state",
+          "worker_redis_connectivity"
+        ]
+      }
+    ],
+    "evidence_records": [
+      {
+        "observation": {
+          "test_identifier": "redis_runtime_state",
+          "target_identifier": "docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+          "execution_status": "completed",
+          "observed_outcome": "running",
+          "duration_seconds": 0.007176649000030011,
+          "measured_energy_joules": null,
+          "timestamp": "2026-11-15 21:36:13.399099+00:00"
+        },
+        "metadata": {
+          "execution_result": {
+            "source": "docker",
+            "status": "completed",
+            "data": {
+              "id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+              "name": "infrasage-voting-phase2c-4db572e8bb-redis-1",
+              "status": "running",
+              "running": true,
+              "restarting": false,
+              "paused": false,
+              "dead": false,
+              "exit_code": 0,
+              "state_error": "",
+              "started_at": "2026-11-15T21:36:02.286716343Z",
+              "finished_at": "2026-11-15T21:35:57.636175555Z",
+              "image": "sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe"
+            },
+            "target": {
+              "container_id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+              "container_name": "infrasage-voting-phase2c-4db572e8bb-redis-1"
+            },
+            "observed_at": "2026-11-15T21:36:13.399099+00:00",
+            "retrieved_at": "2026-11-15T21:36:13.399155+00:00",
+            "docker_endpoint": "http+docker://localhost",
+            "target_identifier": "docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+            "duration_seconds": 0.007176649000030011,
+            "test_id": "redis_runtime_state",
+            "binding": {
+              "provider": "docker",
+              "operation": "container_process_state",
+              "container_id": "0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1",
+              "container_name": "infrasage-voting-phase2c-4db572e8bb-redis-1",
+              "verified_at": "2026-11-15T21:36:13.399099+00:00",
+              "docker_endpoint": "http+docker://localhost",
+              "freshness_max_seconds": 15
+            },
+            "verification_scope": "process-local research only",
+            "diagnostic_actions": 1,
+            "action_phase": "binding_verification_with_evidence",
+            "evidence_from_verification": true,
+            "action_duration_seconds": 0.033350530000006984
+          },
+          "source": "docker",
+          "retrieved_at": "2026-11-15T21:36:13.399565+00:00",
+          "measurement_timestamp": "2026-11-15T21:36:13.399099+00:00",
+          "observation_timestamp_role": "measurement_sample",
+          "identity_verified": true,
+          "reason": "validated_runtime_observation"
+        }
+      },
+      {
+        "observation": {
+          "test_identifier": "worker_redis_connectivity",
+          "target_identifier": "docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+          "execution_status": "completed",
+          "observed_outcome": "refused",
+          "duration_seconds": 5.15378522900005,
+          "measured_energy_joules": null,
+          "timestamp": "2026-11-15 21:36:18.117824+00:00"
+        },
+        "metadata": {
+          "execution_result": {
+            "source": "docker",
+            "status": "completed",
+            "data": {
+              "id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+              "name": "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "outcome": "refused",
+              "endpoint": {
+                "host": "172.19.0.2",
+                "port": 6379
+              }
+            },
+            "observed_at": "2026-11-15T21:36:18.117824+00:00",
+            "probe_config": {
+              "redis_host": "172.19.0.2",
+              "redis_port": 6379,
+              "connection_timeout": 1.0,
+              "execution_deadline": 8.0,
+              "helper_image": "sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32"
+            },
+            "docker_endpoint": "http+docker://localhost",
+            "helper_name": "infrasage-tcp-fd1c2d5a5e10419787f7956c4b5c29c6",
+            "measured_energy_joules": null,
+            "target": {
+              "container_id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+              "container_name": "infrasage-voting-phase2c-4db572e8bb-worker-1"
+            },
+            "target_identifier": "docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+            "request_id": "277f449e759b4d648189358eed5a63bf",
+            "helper_id": "60fd644255583022ec5a10df469c7f8f1aedf62794c671394b588a7706f53f75",
+            "probe_result": {
+              "protocol": "infrasage-tcp-v1",
+              "request_id": "277f449e759b4d648189358eed5a63bf",
+              "worker_id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+              "endpoint": {
+                "host": "172.19.0.2",
+                "port": 6379
+              },
+              "status": "completed",
+              "outcome": "refused",
+              "observed_at": "2026-11-15T21:36:18.117824+00:00"
+            },
+            "namespace": "container:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+            "helper_image": "sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32",
+            "helper_removed": true,
+            "retrieved_at": "2026-11-15T21:36:18.556864+00:00",
+            "duration_seconds": 5.15378522900005,
+            "test_id": "worker_redis_connectivity",
+            "binding": {
+              "provider": "docker",
+              "operation": "worker_to_redis_tcp",
+              "container_id": "1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31",
+              "container_name": "infrasage-voting-phase2c-4db572e8bb-worker-1",
+              "redis_host": "172.19.0.2",
+              "redis_port": 6379,
+              "connection_timeout": 1.0,
+              "execution_deadline": 8.0,
+              "helper_image": "sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32",
+              "docker_endpoint": "http+docker://localhost",
+              "verified_at": "2026-11-15T21:36:18.117824+00:00",
+              "freshness_max_seconds": 15
+            },
+            "verification_scope": "process-local research only",
+            "diagnostic_actions": 1,
+            "action_phase": "binding_verification_with_evidence",
+            "evidence_from_verification": true,
+            "action_duration_seconds": 5.154464868000105
+          },
+          "source": "docker",
+          "retrieved_at": "2026-11-15T21:36:18.557452+00:00",
+          "measurement_timestamp": "2026-11-15T21:36:18.117824+00:00",
+          "observation_timestamp_role": "measurement_sample",
+          "identity_verified": true,
+          "reason": "validated_runtime_observation"
+        }
+      }
+    ],
+    "rejected_evidence": [],
+    "elapsed_seconds": 5.197359981000091
+  },
+  "launcher": {
+    "exit_code": 0,
+    "stdout": "Starting one research investigation; ABSTAIN means insufficient evidence.\n{\n  \"mode\": \"research/bootstrap; uncalibrated probabilities and illustrative estimated costs\",\n  \"model\": {\n    \"model_id\": \"voting-app-synthetic-bootstrap\",\n    \"version\": \"0.1.0\",\n    \"status\": \"synthetic_provisional_not_calibrated\"\n  },\n  \"investigation\": {\n    \"result\": {\n      \"decision\": \"ABSTAIN\",\n      \"reason\": \"maximum test count reached\",\n      \"diagnosed_hypothesis\": null,\n      \"final_beliefs\": {\n        \"redis_process_stopped\": 0.04811599284058962,\n        \"redis_service_degraded\": 0.032932724131221856,\n        \"worker_process_stopped\": 0.05081048849668322,\n        \"postgres_process_stopped\": 0.05081048849668322,\n        \"postgres_connection_saturation\": 0.03387365918785769,\n        \"worker_redis_network_failure\": 0.032932724131221856,\n        \"worker_postgres_network_failure\": 0.039519268957466235,\n        \"worker_redis_endpoint_wrong\": 0.4234207327206388,\n        \"worker_postgres_endpoint_wrong\": 0.028228048848042586,\n        \"host_cpu_saturation\": 0.03387365918785769,\n        \"host_memory_pressure\": 0.03387365918785769,\n        \"host_disk_pressure\": 0.028228048848042586,\n        \"vote_frontend_unavailable\": 0.028228048848042586,\n        \"result_frontend_unavailable\": 0.028228048848042586,\n        \"other_unknown\": 0.10692440726975184\n      },\n      \"belief_history\": [\n        {\n          \"probabilities\": {\n            \"redis_process_stopped\": 0.099009901,\n            \"redis_service_degraded\": 0.069306931,\n            \"worker_process_stopped\": 0.089108911,\n            \"postgres_process_stopped\": 0.089108911,\n            \"postgres_connection_saturation\": 0.059405941,\n            \"worker_redis_network_failure\": 0.069306931,\n            \"worker_postgres_network_failure\": 0.069306931,\n            \"worker_redis_endpoint_wrong\": 0.04950495,\n            \"worker_postgres_endpoint_wrong\": 0.04950495,\n            \"host_cpu_saturation\": 0.059405941,\n            \"host_memory_pressure\": 0.059405941,\n            \"host_disk_pressure\": 0.04950495,\n            \"vote_frontend_unavailable\": 0.04950495,\n            \"result_frontend_unavailable\": 0.04950495,\n            \"other_unknown\": 0.089108911\n          }\n        },\n        {\n          \"probabilities\": {\n            \"redis_process_stopped\": 0.0066085117906129805,\n            \"redis_service_degraded\": 0.0814168656127706,\n            \"worker_process_stopped\": 0.10467882688078246,\n            \"postgres_process_stopped\": 0.10467882688078246,\n            \"postgres_connection_saturation\": 0.06978588497876465,\n            \"worker_redis_network_failure\": 0.0814168656127706,\n            \"worker_postgres_network_failure\": 0.0814168656127706,\n            \"worker_redis_endpoint_wrong\": 0.058154903170029665,\n            \"worker_postgres_endpoint_wrong\": 0.058154903170029665,\n            \"host_cpu_saturation\": 0.06978588497876465,\n            \"host_memory_pressure\": 0.06978588497876465,\n            \"host_disk_pressure\": 0.058154903170029665,\n            \"vote_frontend_unavailable\": 0.058154903170029665,\n            \"result_frontend_unavailable\": 0.058154903170029665,\n            \"other_unknown\": 0.03965106682306809\n          }\n        },\n        {\n          \"probabilities\": {\n            \"redis_process_stopped\": 0.04811599284058962,\n            \"redis_service_degraded\": 0.032932724131221856,\n            \"worker_process_stopped\": 0.05081048849668322,\n            \"postgres_process_stopped\": 0.05081048849668322,\n            \"postgres_connection_saturation\": 0.03387365918785769,\n            \"worker_redis_network_failure\": 0.032932724131221856,\n            \"worker_postgres_network_failure\": 0.039519268957466235,\n            \"worker_redis_endpoint_wrong\": 0.4234207327206388,\n            \"worker_postgres_endpoint_wrong\": 0.028228048848042586,\n            \"host_cpu_saturation\": 0.03387365918785769,\n            \"host_memory_pressure\": 0.03387365918785769,\n            \"host_disk_pressure\": 0.028228048848042586,\n            \"vote_frontend_unavailable\": 0.028228048848042586,\n            \"result_frontend_unavailable\": 0.028228048848042586,\n            \"other_unknown\": 0.10692440726975184\n          }\n        }\n      ],\n      \"observations\": [\n        {\n          \"test_identifier\": \"redis_runtime_state\",\n          \"target_identifier\": \"docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n          \"execution_status\": \"completed\",\n          \"observed_outcome\": \"running\",\n          \"duration_seconds\": 0.007176649000030011,\n          \"measured_energy_joules\": null,\n          \"timestamp\": \"2026-11-15 21:36:13.399099+00:00\"\n        },\n        {\n          \"test_identifier\": \"worker_redis_connectivity\",\n          \"target_identifier\": \"docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n          \"execution_status\": \"completed\",\n          \"observed_outcome\": \"refused\",\n          \"duration_seconds\": 5.15378522900005,\n          \"measured_energy_joules\": null,\n          \"timestamp\": \"2026-11-15 21:36:18.117824+00:00\"\n        }\n      ],\n      \"selections\": [\n        {\n          \"test\": {\n            \"identifier\": \"redis_runtime_state\",\n            \"outcomes\": [\n              \"running\",\n              \"stopped\",\n              \"restarting\"\n            ],\n            \"likelihoods\": {\n              \"redis_process_stopped\": {\n                \"running\": 0.05,\n                \"stopped\": 0.9,\n                \"restarting\": 0.05\n              },\n              \"redis_service_degraded\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"worker_process_stopped\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"postgres_process_stopped\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"postgres_connection_saturation\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"worker_redis_network_failure\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"worker_postgres_network_failure\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"worker_redis_endpoint_wrong\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"worker_postgres_endpoint_wrong\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"host_cpu_saturation\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"host_memory_pressure\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"host_disk_pressure\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"vote_frontend_unavailable\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"result_frontend_unavailable\": {\n                \"running\": 0.88,\n                \"stopped\": 0.06,\n                \"restarting\": 0.06\n              },\n              \"other_unknown\": {\n                \"running\": 0.3333333,\n                \"stopped\": 0.3333333,\n                \"restarting\": 0.3333334\n              }\n            },\n            \"expected_energy_joules\": 0.1,\n            \"expected_latency_seconds\": 0.12,\n            \"description\": \"Docker container/process state, via verified Netdata capability or Docker fallback\"\n          },\n          \"score\": 3.1804039003131557,\n          \"information_gain_bits\": 0.31804039003131557,\n          \"expected_energy_joules\": 0.1,\n          \"expected_latency_seconds\": 0.12,\n          \"policy\": \"ratio\",\n          \"zero_cost_priority\": false\n        },\n        {\n          \"test\": {\n            \"identifier\": \"worker_redis_connectivity\",\n            \"outcomes\": [\n              \"connected\",\n              \"refused\",\n              \"timeout\"\n            ],\n            \"likelihoods\": {\n              \"redis_process_stopped\": {\n                \"connected\": 0.05,\n                \"refused\": 0.9,\n                \"timeout\": 0.05\n              },\n              \"redis_service_degraded\": {\n                \"connected\": 0.05,\n                \"refused\": 0.05,\n                \"timeout\": 0.9\n              },\n              \"worker_process_stopped\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"postgres_process_stopped\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"postgres_connection_saturation\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"worker_redis_network_failure\": {\n                \"connected\": 0.05,\n                \"refused\": 0.05,\n                \"timeout\": 0.9\n              },\n              \"worker_postgres_network_failure\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"worker_redis_endpoint_wrong\": {\n                \"connected\": 0.05,\n                \"refused\": 0.9,\n                \"timeout\": 0.05\n              },\n              \"worker_postgres_endpoint_wrong\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"host_cpu_saturation\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"host_memory_pressure\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"host_disk_pressure\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"vote_frontend_unavailable\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"result_frontend_unavailable\": {\n                \"connected\": 0.88,\n                \"refused\": 0.06,\n                \"timeout\": 0.06\n              },\n              \"other_unknown\": {\n                \"connected\": 0.3333333,\n                \"refused\": 0.3333333,\n                \"timeout\": 0.3333334\n              }\n            },\n            \"expected_energy_joules\": 0.45,\n            \"expected_latency_seconds\": 0.25,\n            \"description\": \"Connectivity tested specifically from worker context to Redis\"\n          },\n          \"score\": 1.250234929129875,\n          \"information_gain_bits\": 0.5626057181084438,\n          \"expected_energy_joules\": 0.45,\n          \"expected_latency_seconds\": 0.25,\n          \"policy\": \"ratio\",\n          \"zero_cost_priority\": false\n        }\n      ],\n      \"total_estimated_energy_joules\": 0.55,\n      \"total_estimated_latency_seconds\": 0.37\n    },\n    \"trace\": [\n      {\n        \"event\": \"started\",\n        \"timestamp\": \"2026-11-15T21:36:13.361892+00:00\",\n        \"elapsed_seconds\": 0.00012039600005664397,\n        \"initial_probabilities\": {\n          \"redis_process_stopped\": 0.099009901,\n          \"redis_service_degraded\": 0.069306931,\n          \"worker_process_stopped\": 0.089108911,\n          \"postgres_process_stopped\": 0.089108911,\n          \"postgres_connection_saturation\": 0.059405941,\n          \"worker_redis_network_failure\": 0.069306931,\n          \"worker_postgres_network_failure\": 0.069306931,\n          \"worker_redis_endpoint_wrong\": 0.04950495,\n          \"worker_postgres_endpoint_wrong\": 0.04950495,\n          \"host_cpu_saturation\": 0.059405941,\n          \"host_memory_pressure\": 0.059405941,\n          \"host_disk_pressure\": 0.04950495,\n          \"vote_frontend_unavailable\": 0.04950495,\n          \"result_frontend_unavailable\": 0.04950495,\n          \"other_unknown\": 0.089108911\n        },\n        \"mode\": \"research/bootstrap: provisional probabilities and estimated costs, not calibrated diagnosis\",\n        \"conditional_independence_assumption\": \"Distinct admitted evidence groups are still assumed conditionally independent given cause\"\n      },\n      {\n        \"event\": \"eligibility\",\n        \"timestamp\": \"2026-11-15T21:36:13.362541+00:00\",\n        \"elapsed_seconds\": 0.0007524709999415791,\n        \"eligible_tests\": [\n          \"redis_runtime_state\",\n          \"worker_redis_connectivity\"\n        ],\n        \"excluded_tests\": {},\n        \"affordable_tests\": [\n          \"redis_runtime_state\",\n          \"worker_redis_connectivity\"\n        ],\n        \"remaining_estimated_energy_joules\": 1.0,\n        \"remaining_seconds\": 29.99987094900007\n      },\n      {\n        \"event\": \"selected\",\n        \"timestamp\": \"2026-11-15T21:36:13.366052+00:00\",\n        \"elapsed_seconds\": 0.004265135999958147,\n        \"test_id\": \"redis_runtime_state\",\n        \"information_gain_bits\": 0.31804039003131557,\n        \"policy\": \"ratio\",\n        \"policy_score\": 3.1804039003131557,\n        \"expected_energy_joules\": 0.1,\n        \"expected_latency_seconds\": 0.12,\n        \"target\": {\n          \"container_id\": \"0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\"\n        }\n      },\n      {\n        \"event\": \"action\",\n        \"timestamp\": \"2026-11-15T21:36:13.399514+00:00\",\n        \"elapsed_seconds\": 0.03771571600009338,\n        \"test_id\": \"redis_runtime_state\",\n        \"execution_status\": \"completed\",\n        \"phase\": \"binding_verification_with_evidence\",\n        \"accounting\": \"one charged attempt; verification evidence consumed without another execution\"\n      },\n      {\n        \"event\": \"observation\",\n        \"timestamp\": \"2026-11-15T21:36:13.400479+00:00\",\n        \"elapsed_seconds\": 0.038681534000033935,\n        \"test_id\": \"redis_runtime_state\",\n        \"observation\": {\n          \"test_identifier\": \"redis_runtime_state\",\n          \"target_identifier\": \"docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n          \"execution_status\": \"completed\",\n          \"observed_outcome\": \"running\",\n          \"duration_seconds\": 0.007176649000030011,\n          \"measured_energy_joules\": null,\n          \"timestamp\": \"2026-11-15 21:36:13.399099+00:00\"\n        },\n        \"admitted\": true,\n        \"reason\": \"validated unique evidence\",\n        \"provenance\": {\n          \"execution_result\": {\n            \"source\": \"docker\",\n            \"status\": \"completed\",\n            \"data\": {\n              \"id\": \"0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n              \"name\": \"infrasage-voting-phase2c-4db572e8bb-redis-1\",\n              \"status\": \"running\",\n              \"running\": true,\n              \"restarting\": false,\n              \"paused\": false,\n              \"dead\": false,\n              \"exit_code\": 0,\n              \"state_error\": \"\",\n              \"started_at\": \"2026-11-15T21:36:02.286716343Z\",\n              \"finished_at\": \"2026-11-15T21:35:57.636175555Z\",\n              \"image\": \"sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe\"\n            },\n            \"target\": {\n              \"container_id\": \"0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n              \"container_name\": \"infrasage-voting-phase2c-4db572e8bb-redis-1\"\n            },\n            \"observed_at\": \"2026-11-15T21:36:13.399099+00:00\",\n            \"retrieved_at\": \"2026-11-15T21:36:13.399155+00:00\",\n            \"docker_endpoint\": \"http+docker://localhost\",\n            \"target_identifier\": \"docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n            \"duration_seconds\": 0.007176649000030011,\n            \"test_id\": \"redis_runtime_state\",\n            \"binding\": {\n              \"provider\": \"docker\",\n              \"operation\": \"container_process_state\",\n              \"container_id\": \"0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n              \"container_name\": \"infrasage-voting-phase2c-4db572e8bb-redis-1\",\n              \"verified_at\": \"2026-11-15T21:36:13.399099+00:00\",\n              \"docker_endpoint\": \"http+docker://localhost\",\n              \"freshness_max_seconds\": 15\n            },\n            \"verification_scope\": \"process-local research only\",\n            \"diagnostic_actions\": 1,\n            \"action_phase\": \"binding_verification_with_evidence\",\n            \"evidence_from_verification\": true,\n            \"action_duration_seconds\": 0.033350530000006984\n          },\n          \"source\": \"docker\",\n          \"retrieved_at\": \"2026-11-15T21:36:13.399565+00:00\",\n          \"measurement_timestamp\": \"2026-11-15T21:36:13.399099+00:00\",\n          \"observation_timestamp_role\": \"measurement_sample\",\n          \"identity_verified\": true,\n          \"reason\": \"validated_runtime_observation\"\n        }\n      },\n      {\n        \"event\": \"posterior\",\n        \"timestamp\": \"2026-11-15T21:36:13.400509+00:00\",\n        \"elapsed_seconds\": 0.038704865999989124,\n        \"probabilities\": {\n          \"redis_process_stopped\": 0.0066085117906129805,\n          \"redis_service_degraded\": 0.0814168656127706,\n          \"worker_process_stopped\": 0.10467882688078246,\n          \"postgres_process_stopped\": 0.10467882688078246,\n          \"postgres_connection_saturation\": 0.06978588497876465,\n          \"worker_redis_network_failure\": 0.0814168656127706,\n          \"worker_postgres_network_failure\": 0.0814168656127706,\n          \"worker_redis_endpoint_wrong\": 0.058154903170029665,\n          \"worker_postgres_endpoint_wrong\": 0.058154903170029665,\n          \"host_cpu_saturation\": 0.06978588497876465,\n          \"host_memory_pressure\": 0.06978588497876465,\n          \"host_disk_pressure\": 0.058154903170029665,\n          \"vote_frontend_unavailable\": 0.058154903170029665,\n          \"result_frontend_unavailable\": 0.058154903170029665,\n          \"other_unknown\": 0.03965106682306809\n        },\n        \"attempted_tests\": [\n          \"redis_runtime_state\"\n        ],\n        \"completed_tests\": [\n          \"redis_runtime_state\"\n        ],\n        \"remaining_candidates\": [\n          \"worker_redis_connectivity\"\n        ],\n        \"total_estimated_energy_joules\": 0.1,\n        \"total_estimated_latency_seconds\": 0.12\n      },\n      {\n        \"event\": \"eligibility\",\n        \"timestamp\": \"2026-11-15T21:36:13.400729+00:00\",\n        \"elapsed_seconds\": 0.03893290400014848,\n        \"eligible_tests\": [\n          \"worker_redis_connectivity\"\n        ],\n        \"excluded_tests\": {\n          \"redis_runtime_state\": \"already attempted or consumed as initial evidence\"\n        },\n        \"affordable_tests\": [\n          \"worker_redis_connectivity\"\n        ],\n        \"remaining_estimated_energy_joules\": 0.9,\n        \"remaining_seconds\": 29.961288749000005\n      },\n      {\n        \"event\": \"selected\",\n        \"timestamp\": \"2026-11-15T21:36:13.402631+00:00\",\n        \"elapsed_seconds\": 0.04084988199997497,\n        \"test_id\": \"worker_redis_connectivity\",\n        \"information_gain_bits\": 0.5626057181084438,\n        \"policy\": \"ratio\",\n        \"policy_score\": 1.250234929129875,\n        \"expected_energy_joules\": 0.45,\n        \"expected_latency_seconds\": 0.25,\n        \"target\": {\n          \"container_id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\"\n        }\n      },\n      {\n        \"event\": \"action\",\n        \"timestamp\": \"2026-11-15T21:36:18.557395+00:00\",\n        \"elapsed_seconds\": 5.195600596000077,\n        \"test_id\": \"worker_redis_connectivity\",\n        \"execution_status\": \"completed\",\n        \"phase\": \"binding_verification_with_evidence\",\n        \"accounting\": \"one charged attempt; verification evidence consumed without another execution\"\n      },\n      {\n        \"event\": \"observation\",\n        \"timestamp\": \"2026-11-15T21:36:18.558846+00:00\",\n        \"elapsed_seconds\": 5.197065538000061,\n        \"test_id\": \"worker_redis_connectivity\",\n        \"observation\": {\n          \"test_identifier\": \"worker_redis_connectivity\",\n          \"target_identifier\": \"docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n          \"execution_status\": \"completed\",\n          \"observed_outcome\": \"refused\",\n          \"duration_seconds\": 5.15378522900005,\n          \"measured_energy_joules\": null,\n          \"timestamp\": \"2026-11-15 21:36:18.117824+00:00\"\n        },\n        \"admitted\": true,\n        \"reason\": \"validated unique evidence\",\n        \"provenance\": {\n          \"execution_result\": {\n            \"source\": \"docker\",\n            \"status\": \"completed\",\n            \"data\": {\n              \"id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n              \"name\": \"infrasage-voting-phase2c-4db572e8bb-worker-1\",\n              \"outcome\": \"refused\",\n              \"endpoint\": {\n                \"host\": \"172.19.0.2\",\n                \"port\": 6379\n              }\n            },\n            \"observed_at\": \"2026-11-15T21:36:18.117824+00:00\",\n            \"probe_config\": {\n              \"redis_host\": \"172.19.0.2\",\n              \"redis_port\": 6379,\n              \"connection_timeout\": 1.0,\n              \"execution_deadline\": 8.0,\n              \"helper_image\": \"sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32\"\n            },\n            \"docker_endpoint\": \"http+docker://localhost\",\n            \"helper_name\": \"infrasage-tcp-fd1c2d5a5e10419787f7956c4b5c29c6\",\n            \"measured_energy_joules\": null,\n            \"target\": {\n              \"container_id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n              \"container_name\": \"infrasage-voting-phase2c-4db572e8bb-worker-1\"\n            },\n            \"target_identifier\": \"docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n            \"request_id\": \"277f449e759b4d648189358eed5a63bf\",\n            \"helper_id\": \"60fd644255583022ec5a10df469c7f8f1aedf62794c671394b588a7706f53f75\",\n            \"probe_result\": {\n              \"protocol\": \"infrasage-tcp-v1\",\n              \"request_id\": \"277f449e759b4d648189358eed5a63bf\",\n              \"worker_id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n              \"endpoint\": {\n                \"host\": \"172.19.0.2\",\n                \"port\": 6379\n              },\n              \"status\": \"completed\",\n              \"outcome\": \"refused\",\n              \"observed_at\": \"2026-11-15T21:36:18.117824+00:00\"\n            },\n            \"namespace\": \"container:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n            \"helper_image\": \"sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32\",\n            \"helper_removed\": true,\n            \"retrieved_at\": \"2026-11-15T21:36:18.556864+00:00\",\n            \"duration_seconds\": 5.15378522900005,\n            \"test_id\": \"worker_redis_connectivity\",\n            \"binding\": {\n              \"provider\": \"docker\",\n              \"operation\": \"worker_to_redis_tcp\",\n              \"container_id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n              \"container_name\": \"infrasage-voting-phase2c-4db572e8bb-worker-1\",\n              \"redis_host\": \"172.19.0.2\",\n              \"redis_port\": 6379,\n              \"connection_timeout\": 1.0,\n              \"execution_deadline\": 8.0,\n              \"helper_image\": \"sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32\",\n              \"docker_endpoint\": \"http+docker://localhost\",\n              \"verified_at\": \"2026-11-15T21:36:18.117824+00:00\",\n              \"freshness_max_seconds\": 15\n            },\n            \"verification_scope\": \"process-local research only\",\n            \"diagnostic_actions\": 1,\n            \"action_phase\": \"binding_verification_with_evidence\",\n            \"evidence_from_verification\": true,\n            \"action_duration_seconds\": 5.154464868000105\n          },\n          \"source\": \"docker\",\n          \"retrieved_at\": \"2026-11-15T21:36:18.557452+00:00\",\n          \"measurement_timestamp\": \"2026-11-15T21:36:18.117824+00:00\",\n          \"observation_timestamp_role\": \"measurement_sample\",\n          \"identity_verified\": true,\n          \"reason\": \"validated_runtime_observation\"\n        }\n      },\n      {\n        \"event\": \"posterior\",\n        \"timestamp\": \"2026-11-15T21:36:18.558906+00:00\",\n        \"elapsed_seconds\": 5.197115510000003,\n        \"probabilities\": {\n          \"redis_process_stopped\": 0.04811599284058962,\n          \"redis_service_degraded\": 0.032932724131221856,\n          \"worker_process_stopped\": 0.05081048849668322,\n          \"postgres_process_stopped\": 0.05081048849668322,\n          \"postgres_connection_saturation\": 0.03387365918785769,\n          \"worker_redis_network_failure\": 0.032932724131221856,\n          \"worker_postgres_network_failure\": 0.039519268957466235,\n          \"worker_redis_endpoint_wrong\": 0.4234207327206388,\n          \"worker_postgres_endpoint_wrong\": 0.028228048848042586,\n          \"host_cpu_saturation\": 0.03387365918785769,\n          \"host_memory_pressure\": 0.03387365918785769,\n          \"host_disk_pressure\": 0.028228048848042586,\n          \"vote_frontend_unavailable\": 0.028228048848042586,\n          \"result_frontend_unavailable\": 0.028228048848042586,\n          \"other_unknown\": 0.10692440726975184\n        },\n        \"attempted_tests\": [\n          \"redis_runtime_state\",\n          \"worker_redis_connectivity\"\n        ],\n        \"completed_tests\": [\n          \"redis_runtime_state\",\n          \"worker_redis_connectivity\"\n        ],\n        \"remaining_candidates\": [],\n        \"total_estimated_energy_joules\": 0.55,\n        \"total_estimated_latency_seconds\": 0.37\n      },\n      {\n        \"event\": \"eligibility\",\n        \"timestamp\": \"2026-11-15T21:36:18.558959+00:00\",\n        \"elapsed_seconds\": 5.197163015000115,\n        \"eligible_tests\": [],\n        \"excluded_tests\": {\n          \"redis_runtime_state\": \"already attempted or consumed as initial evidence\",\n          \"worker_redis_connectivity\": \"already attempted or consumed as initial evidence\"\n        },\n        \"affordable_tests\": [],\n        \"remaining_estimated_energy_joules\": 0.44999999999999996,\n        \"remaining_seconds\": 24.802876309999874\n      },\n      {\n        \"event\": \"stopped\",\n        \"timestamp\": \"2026-11-15T21:36:18.559144+00:00\",\n        \"elapsed_seconds\": 5.197351975999936,\n        \"decision\": \"ABSTAIN\",\n        \"reason\": \"maximum test count reached\",\n        \"diagnosed_hypothesis\": null,\n        \"final_probabilities\": {\n          \"redis_process_stopped\": 0.04811599284058962,\n          \"redis_service_degraded\": 0.032932724131221856,\n          \"worker_process_stopped\": 0.05081048849668322,\n          \"postgres_process_stopped\": 0.05081048849668322,\n          \"postgres_connection_saturation\": 0.03387365918785769,\n          \"worker_redis_network_failure\": 0.032932724131221856,\n          \"worker_postgres_network_failure\": 0.039519268957466235,\n          \"worker_redis_endpoint_wrong\": 0.4234207327206388,\n          \"worker_postgres_endpoint_wrong\": 0.028228048848042586,\n          \"host_cpu_saturation\": 0.03387365918785769,\n          \"host_memory_pressure\": 0.03387365918785769,\n          \"host_disk_pressure\": 0.028228048848042586,\n          \"vote_frontend_unavailable\": 0.028228048848042586,\n          \"result_frontend_unavailable\": 0.028228048848042586,\n          \"other_unknown\": 0.10692440726975184\n        },\n        \"selected_tests\": [\n          \"redis_runtime_state\",\n          \"worker_redis_connectivity\"\n        ],\n        \"attempted_tests\": [\n          \"redis_runtime_state\",\n          \"worker_redis_connectivity\"\n        ],\n        \"completed_tests\": [\n          \"redis_runtime_state\",\n          \"worker_redis_connectivity\"\n        ]\n      }\n    ],\n    \"evidence_records\": [\n      {\n        \"observation\": {\n          \"test_identifier\": \"redis_runtime_state\",\n          \"target_identifier\": \"docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n          \"execution_status\": \"completed\",\n          \"observed_outcome\": \"running\",\n          \"duration_seconds\": 0.007176649000030011,\n          \"measured_energy_joules\": null,\n          \"timestamp\": \"2026-11-15 21:36:13.399099+00:00\"\n        },\n        \"metadata\": {\n          \"execution_result\": {\n            \"source\": \"docker\",\n            \"status\": \"completed\",\n            \"data\": {\n              \"id\": \"0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n              \"name\": \"infrasage-voting-phase2c-4db572e8bb-redis-1\",\n              \"status\": \"running\",\n              \"running\": true,\n              \"restarting\": false,\n              \"paused\": false,\n              \"dead\": false,\n              \"exit_code\": 0,\n              \"state_error\": \"\",\n              \"started_at\": \"2026-11-15T21:36:02.286716343Z\",\n              \"finished_at\": \"2026-11-15T21:35:57.636175555Z\",\n              \"image\": \"sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe\"\n            },\n            \"target\": {\n              \"container_id\": \"0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n              \"container_name\": \"infrasage-voting-phase2c-4db572e8bb-redis-1\"\n            },\n            \"observed_at\": \"2026-11-15T21:36:13.399099+00:00\",\n            \"retrieved_at\": \"2026-11-15T21:36:13.399155+00:00\",\n            \"docker_endpoint\": \"http+docker://localhost\",\n            \"target_identifier\": \"docker:0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n            \"duration_seconds\": 0.007176649000030011,\n            \"test_id\": \"redis_runtime_state\",\n            \"binding\": {\n              \"provider\": \"docker\",\n              \"operation\": \"container_process_state\",\n              \"container_id\": \"0ac09d0840d6677602e832c6e4ec4b21bfe59ca2feb45e7d3a3b022018b457f1\",\n              \"container_name\": \"infrasage-voting-phase2c-4db572e8bb-redis-1\",\n              \"verified_at\": \"2026-11-15T21:36:13.399099+00:00\",\n              \"docker_endpoint\": \"http+docker://localhost\",\n              \"freshness_max_seconds\": 15\n            },\n            \"verification_scope\": \"process-local research only\",\n            \"diagnostic_actions\": 1,\n            \"action_phase\": \"binding_verification_with_evidence\",\n            \"evidence_from_verification\": true,\n            \"action_duration_seconds\": 0.033350530000006984\n          },\n          \"source\": \"docker\",\n          \"retrieved_at\": \"2026-11-15T21:36:13.399565+00:00\",\n          \"measurement_timestamp\": \"2026-11-15T21:36:13.399099+00:00\",\n          \"observation_timestamp_role\": \"measurement_sample\",\n          \"identity_verified\": true,\n          \"reason\": \"validated_runtime_observation\"\n        }\n      },\n      {\n        \"observation\": {\n          \"test_identifier\": \"worker_redis_connectivity\",\n          \"target_identifier\": \"docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n          \"execution_status\": \"completed\",\n          \"observed_outcome\": \"refused\",\n          \"duration_seconds\": 5.15378522900005,\n          \"measured_energy_joules\": null,\n          \"timestamp\": \"2026-11-15 21:36:18.117824+00:00\"\n        },\n        \"metadata\": {\n          \"execution_result\": {\n            \"source\": \"docker\",\n            \"status\": \"completed\",\n            \"data\": {\n              \"id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n              \"name\": \"infrasage-voting-phase2c-4db572e8bb-worker-1\",\n              \"outcome\": \"refused\",\n              \"endpoint\": {\n                \"host\": \"172.19.0.2\",\n                \"port\": 6379\n              }\n            },\n            \"observed_at\": \"2026-11-15T21:36:18.117824+00:00\",\n            \"probe_config\": {\n              \"redis_host\": \"172.19.0.2\",\n              \"redis_port\": 6379,\n              \"connection_timeout\": 1.0,\n              \"execution_deadline\": 8.0,\n              \"helper_image\": \"sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32\"\n            },\n            \"docker_endpoint\": \"http+docker://localhost\",\n            \"helper_name\": \"infrasage-tcp-fd1c2d5a5e10419787f7956c4b5c29c6\",\n            \"measured_energy_joules\": null,\n            \"target\": {\n              \"container_id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n              \"container_name\": \"infrasage-voting-phase2c-4db572e8bb-worker-1\"\n            },\n            \"target_identifier\": \"docker:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n            \"request_id\": \"277f449e759b4d648189358eed5a63bf\",\n            \"helper_id\": \"60fd644255583022ec5a10df469c7f8f1aedf62794c671394b588a7706f53f75\",\n            \"probe_result\": {\n              \"protocol\": \"infrasage-tcp-v1\",\n              \"request_id\": \"277f449e759b4d648189358eed5a63bf\",\n              \"worker_id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n              \"endpoint\": {\n                \"host\": \"172.19.0.2\",\n                \"port\": 6379\n              },\n              \"status\": \"completed\",\n              \"outcome\": \"refused\",\n              \"observed_at\": \"2026-11-15T21:36:18.117824+00:00\"\n            },\n            \"namespace\": \"container:1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n            \"helper_image\": \"sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32\",\n            \"helper_removed\": true,\n            \"retrieved_at\": \"2026-11-15T21:36:18.556864+00:00\",\n            \"duration_seconds\": 5.15378522900005,\n            \"test_id\": \"worker_redis_connectivity\",\n            \"binding\": {\n              \"provider\": \"docker\",\n              \"operation\": \"worker_to_redis_tcp\",\n              \"container_id\": \"1f526879fba169cddd2276d9ffbd28706e073430dab781c29d16b7ad1285ca31\",\n              \"container_name\": \"infrasage-voting-phase2c-4db572e8bb-worker-1\",\n              \"redis_host\": \"172.19.0.2\",\n              \"redis_port\": 6379,\n              \"connection_timeout\": 1.0,\n              \"execution_deadline\": 8.0,\n              \"helper_image\": \"sha256:167c897bcbb9bc26d8705493db5aec85c1c0d87292298bab035708ffd03e3f32\",\n              \"docker_endpoint\": \"http+docker://localhost\",\n              \"verified_at\": \"2026-11-15T21:36:18.117824+00:00\",\n              \"freshness_max_seconds\": 15\n            },\n            \"verification_scope\": \"process-local research only\",\n            \"diagnostic_actions\": 1,\n            \"action_phase\": \"binding_verification_with_evidence\",\n            \"evidence_from_verification\": true,\n            \"action_duration_seconds\": 5.154464868000105\n          },\n          \"source\": \"docker\",\n          \"retrieved_at\": \"2026-11-15T21:36:18.557452+00:00\",\n          \"measurement_timestamp\": \"2026-11-15T21:36:18.117824+00:00\",\n          \"observation_timestamp_role\": \"measurement_sample\",\n          \"identity_verified\": true,\n          \"reason\": \"validated_runtime_observation\"\n        }\n      }\n    ],\n    \"rejected_evidence\": [],\n    \"elapsed_seconds\": 5.197359981000091\n  }\n}\n",
+    "stderr": ""
+  },
+  "evaluation": {
+    "comparison": "abstention",
+    "calibrated_accuracy_claim": false,
+    "selected_test_order": [
+      "redis_runtime_state",
+      "worker_redis_connectivity"
+    ],
+    "outcomes": [
+      {
+        "test_id": "redis_runtime_state",
+        "status": "completed",
+        "outcome": "running"
+      },
+      {
+        "test_id": "worker_redis_connectivity",
+        "status": "completed",
+        "outcome": "refused"
+      }
+    ],
+    "all_attempted_observations_completed": true,
+    "both_supported_tests_completed": true,
+    "admitted_evidence_count": 2,
+    "posterior_sum": 1.0,
+    "measured_energy_joules": null,
+    "estimated_energy_joules": 0.55,
+    "estimated_latency_seconds": 0.37,
+    "actual_investigation_seconds": 5.197359981000091
+  },
+  "finished_at": "2026-11-15T21:36:24.372773+00:00",
+  "successful_experiment": true,
+  "artifact_path": "experiments/data/readiness-2026-11-15/launcher-after/700621927c59498c844aed3e1a1e9dde-redis_port_unavailable.json"
+}

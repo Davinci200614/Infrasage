@@ -1,0 +1,183 @@
+# Integration status — 15 November 2026
+
+The historical phase tracker below is retained from the twin branch. Its live
+host results have not been rerun for the merged prototype. The current integration
+uses `lab/compose.twin.yaml` for the twin and `lab/compose.yaml` for the demo lab.
+Native test outcomes are preserved by the public API; helpers resolve locally;
+worker runtime checks and optional energy accounting use the shared pipeline.
+The combined unit tests and regression checks are recorded in
+`docs/PROTOTYPE_INTEGRATION.md`. Runtime symptom-coupling and network/log isolation
+checks remain explicitly unverified. No new accuracy or energy-saving claim follows
+from this merge.
+
+---
+
+# Digital twin status
+
+Phase tracker for `backend/twin/DIGITAL_TWIN_DEVELOPMENT_GUIDE.md` §18. Update
+this file when a phase passes: it is the handoff for the next coding session.
+
+Host: this device (Docker 29.9.3, Compose v5.7.1). Lab data is capped by the
+40 GiB ext4 loop mounted at `/var/lib/docker` (see `lab/README.md`).
+
+## Phase 1 — scaffolding and pinned lab stack (done)
+
+- `opencode.json`: ponytail plugin + MCP servers.
+- `AGENTS.md`, `.gitignore`, `.env.example`, `requirements.txt`, `.venv/`.
+- Lab vendored at `63e9150` (`lab/target.lock`); upstream compose kept verbatim,
+  changes only in `lab/docker-compose.infrasage.yml`; ports loopback-only.
+- `backend/api/investigate.py`: Q3 contract shim, still `NotImplementedError`.
+- `backend/twin/catalogues/workloads.yaml`: timeouts + workload definition.
+
+## Phase 2 — lab manager, workload, injector, ground truth (done 2026-11-13)
+
+| §18 step | Artifact | Pass criterion | Result |
+|---|---|---|---|
+| 1 Lab manager | `backend/twin/runner/lab.py` | 5 × reset→baseline→down, no residue | **pass** (5/5) |
+| 2 Workload | `backend/twin/workload/generator.py` | baseline vote within timeout, 10/10 | **pass** (10/10) |
+| 3 Injector | `backend/twin/injector/injector.py` | injection verified, clean revert | **pass** (4/4 trials) |
+| 4 Ground truth | `backend/twin/ground_truth/store.py`, `tests/test_isolation.py` | write-once `0600`, import guard | **pass** (unit tests) |
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 19 passed
+```
+
+- Step 1: real build + 5 cycles, `PASS: 5 clean cycles`, residue empty every time.
+- Step 2: `10/10 baseline votes landed` (each a unique voter_id found in `votes`).
+- Step 3: `redis_process_stopped` and `postgres_unavailable`, 2 trials each —
+  `inject=verified`, symptom observed, `revert=verified`, stack healthy again.
+- Step 4: label file is `0600` and refuses a second write; AST guard rejects any
+  `backend.twin` import in `api/collectors/core/diagnosis/optimization/energy`.
+
+Faults implemented: `docker_stop` / `docker_start` for `redis` and `db` only.
+
+## Phase 3 — experiment runner (§18 step 5) (done 2026-11-14)
+
+Do not start step 6 before step 5 passes.
+
+1. `backend/twin/runner/experiment.py`: implement §8.1 steps 1–11 with a
+   **stub diagnostic** (fixed answer; must not read the label). Reuse
+   `lab.reset/check_baseline`, `injector.apply/revert`, `ground_truth.store`.
+2. Per step: timeout from `workloads.yaml`, failure => `execution_status: error`
+   and a run status (`invalid_baseline`, `injection_failed`, `dirty`, `error`);
+   no silent retries (§8.2).
+3. Ordering that tests must prove: label written after verified injection and
+   before `investigate(...)`; `ground_truth_label` appears in the record only
+   after the diagnosis is frozen (§8.1 steps 6–9).
+4. Run record: build the §11 shape now (write it to `experiments/runs/<run_id>.json`);
+   the formal JSON schema is §18 step 9.
+5. One fault per run, one run at a time, `down -v` between runs; release the
+   stack on every exit path.
+6. Tests: fake docker CLI + local HTTP stub (see `backend/twin/tests/conftest.py`),
+   stub diagnostic, assert `lab_status`, label timing, and teardown on failure.
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 26 passed
+```
+
+- `backend/twin/runner/experiment.py` wires §8.1 steps 2–11 (reset → baseline →
+  warm-up → inject → label → investigate → freeze → score → revert → teardown →
+  persist) with the fixed-answer stub from `backend/twin/runner/experiment.py`.
+- Failures map to `invalid_baseline` / `injection_failed` / `error` / `dirty`;
+  no silent retries.
+- Label is written after verified injection and before `investigate(...)`; the
+  run record only gains `ground_truth_label` + `scored` after the diagnosis is
+  frozen.
+
+## Phase 4 — real diagnostic entry point (done 2026-11-15)
+
+1. `backend/api/investigate.py`: implemented `investigate(LabTarget) -> InvestigationResult`
+   wiring catalogues, collectors, Bayesian engine, planner.
+2. Diagnostic backend merged from teammate branch: catalogues, collectors, Bayesian,
+   planner, orchestrator, diagnostic adapter.
+3. Twin now calls real `investigate()` instead of stub.
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 26 passed
+```
+
+## Phase 5 — additional fault types (done 2026-11-15)
+
+| Fault | Method | Target | Label | Verified |
+|---|---|---|---|---|
+| `worker_process_stopped` | `docker_stop` | worker | `worker_process_stopped` | ✅ |
+| `redis_network_unreachable` | `network_partition` | worker | `worker_redis_network_failure` | ✅ |
+| `connectivity_or_endpoint` | `dns_override` | worker | `worker_redis_endpoint_wrong` | ✅ |
+| `other_unknown` | `chaos` (STOP/CONT) | worker | `other_unknown` | ✅ |
+
+- Live tests enabled: `worker_runtime_state`, `worker_redis_connectivity` (Docker-backed)
+- Injector extended with network partition, DNS override, chaos injection
+- All 4 new faults: apply → verify → revert cycle works
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 26 passed
+```
+
+## Phase 6 — schema, aggregates, calibration/evaluation splits (done 2026-11-15)
+
+| Artifact | Location | Status |
+|---|---|---|
+| Run record JSON schema | `experiments/schema/run_record.schema.json` | ✅ |
+| All 17 run records validated | `experiments/runs/` | ✅ 17/17 valid |
+| Per-fault aggregates | `experiments/aggregates/` | ✅ |
+| Likelihood tables (smoothed) | `experiments/aggregates/likelihoods.json` | ✅ |
+| Calibration/evaluation split | seed % 2 (even=cal, odd=eval) | ✅ |
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 26 passed
+python -m backend.twin.scoring.aggregate  # aggregates generated
+```
+
+## Phase 7 — Repair validator (done 2026-11-15)
+
+| Artifact | Location | Status |
+|---|---|---|
+| Repair catalogue | `backend/twin/catalogues/repairs.yaml` | ✅ 6 repairs |
+| Repair validator | `backend/twin/repair/validator.py` | ✅ |
+| All repairs tested with real lab | 6/6 faults → restored | ✅ |
+| Unit tests | `backend/twin/tests/test_repair.py` | ✅ 6 passed |
+
+Evidence:
+
+```sh
+.venv/bin/python -m pytest backend/twin/tests -q      # 32 passed
+```
+
+## Later phases (§18)
+
+| Phase | Steps | Scope |
+|---|---|---|
+| 8 | 12 | Energy measurement after latency is reliable |
+| 9 | 13 | Twin self-validation, results in `experiments/validation/` |
+
+## Findings to carry forward
+
+- **Worker cascade:** stopping `redis` or `db` makes the worker exit(1)
+  (`worker/Program.cs` catches and returns). `worker/restart: unless-stopped` is
+  now in the override, so a fault no longer kills the worker permanently. Manual
+  `docker stop worker` (a future fault) is still respected.
+- **`connectivity_or_endpoint` cannot be env-injected:** the worker hardcodes
+  `Server=db` and `redis`; it needs DNS/`/etc/hosts` or network-level injection.
+- **Override needs Compose ≥ 2.24:** `!override` replaces the base port list;
+  Compose appends otherwise, exposing the lab on `0.0.0.0`.
+- **Vote verification is the DB row, not the UI:** `result` renders counts over
+  socket.io, so baseline polls `votes` in database `postgres` (table `votes`).
+- **Do not run Docker as the agent's default user:** this session needs
+  `sg docker -c '...'` until opencode is restarted after `usermod -aG docker`.
+- **Storage cap:** 40 GiB at `/var/lib/docker`; containerd's root points at
+  `/var/lib/docker/containerd` so images and build cache are inside the cap.
+  `docker system df` before large builds; prune build cache if it fills.
+
+## Out of scope until later
+
+`frontend/`, upstream service source, and `backend/twin/repair/` (Phase 7).

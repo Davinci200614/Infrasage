@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "discovery_status": "not_performed",
+  "agent_version": null,
+  "node_id": null,
+  "discovered_at": null,
+  "metric_contexts": [],
+  "alerts": [],
+  "functions": [],
+  "note": "Do not rename to real inventory until live discovery is performed"
+}

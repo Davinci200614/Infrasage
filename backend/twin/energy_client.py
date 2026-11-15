@@ -86,40 +86,36 @@ class EnergyClient:
     def measure_baseline(self, duration_seconds: float = 10.0) -> BaselineEnergy:
         """Measure host baseline energy without lab running.
         
-        Note: CPU-based fallback blocks for `duration_seconds` to measure CPU%.
-        For non-blocking baseline, use RAPL server (requires root).
+        Uses energy server for RAPL measurement (requires root).
+        Returns not_measured if server unavailable — no fake estimates.
         """
         health = self.health_check()
         rapl_available = health.get("rapl_available", False)
 
         if rapl_available:
-            # Use energy server for RAPL measurement
+            # Use energy server start/stop for RAPL measurement
             try:
-                resp = requests.post(
-                    f"{self.base_url}/measure/interval",
-                    json={"duration_seconds": duration_seconds},
-                    timeout=duration_seconds + 5,
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    return BaselineEnergy(
-                        energy_joules=data.get("energy_joules"),
-                        energy_method=data.get("energy_method", "measured"),
-                        duration_seconds=data.get("duration_seconds", duration_seconds),
-                        hardware_context=self._hardware_context,
-                    )
+                if requests.post(f"{self.base_url}/measure/start", timeout=3).status_code == 200:
+                    import time
+                    time.sleep(duration_seconds)
+                    resp = requests.post(f"{self.base_url}/measure/stop", timeout=5)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        return BaselineEnergy(
+                            energy_joules=data.get("energy_microjoules", 0) / 1_000_000,
+                            energy_method="measured",
+                            duration_seconds=data.get("elapsed_seconds", duration_seconds),
+                            hardware_context=self._hardware_context,
+                        )
             except Exception:
                 pass
 
-        # Fallback: CPU-based estimation (blocks for duration_seconds)
-        cpu_percent = psutil.cpu_percent(interval=duration_seconds)
-        # Rough estimate: assume ~65W TDP for typical server CPU (configurable via INFRASAGE_CPU_TDP)
-        estimated_joules = _DEFAULT_CPU_TDP_WATTS * (cpu_percent / 100) * duration_seconds
+        # Server unavailable — honest "not measured"
         return BaselineEnergy(
-            energy_joules=estimated_joules,
-            energy_method="estimated",
+            energy_joules=None,
+            energy_method="not_measured",
             duration_seconds=duration_seconds,
-            hardware_context={**self._hardware_context, "cpu_percent_baseline": cpu_percent},
+            hardware_context=self._hardware_context,
         )
 
     def start_measurement(self) -> bool:
@@ -152,26 +148,12 @@ class EnergyClient:
             elapsed = time.monotonic() - start_time
             methods.append(f"request_failed: {e}")
 
-        # Fallback: estimate from CPU usage during the interval
-        # Note: this is a post-hoc estimate, less accurate
-        try:
-            cpu_percent = psutil.cpu_percent(interval=0.1)  # quick sample
-            estimated = _DEFAULT_CPU_TDP_WATTS * (cpu_percent / 100) * elapsed
-            methods.append(f"estimated_from_cpu ({cpu_percent}%)")
-            return EnergyReading(
-                energy_joules=estimated,
-                energy_method="estimated",
-                elapsed_seconds=elapsed,
-                methods_attempted=methods,
-                hardware_context={**self._hardware_context, "cpu_percent": cpu_percent},
-            )
-        except Exception as e:
-            methods.append(f"psutil_failed: {e}")
-
+        # Fallback: honest "not measured" — 0.1s sample × elapsed is noise, not data
+        methods.append("server_unavailable")
         return EnergyReading(
             energy_joules=None,
             energy_method="not_measured",
-            elapsed_seconds=time.monotonic() - start_time,
+            elapsed_seconds=elapsed,
             methods_attempted=methods,
             hardware_context=self._hardware_context,
         )
@@ -182,17 +164,14 @@ class EnergyClient:
             time.sleep(duration_seconds)
             return self.stop_measurement()
         else:
-            # Server not available, estimate directly
-            start = time.monotonic()
-            cpu_percent = psutil.cpu_percent(interval=duration_seconds)
+            # Server not available — honest "not measured"
             elapsed = time.monotonic() - start
-            estimated = _DEFAULT_CPU_TDP_WATTS * (cpu_percent / 100) * elapsed
             return EnergyReading(
-                energy_joules=estimated,
-                energy_method="estimated",
+                energy_joules=None,
+                energy_method="not_measured",
                 elapsed_seconds=elapsed,
-                methods_attempted=["estimated_from_cpu"],
-                hardware_context={**self._hardware_context, "cpu_percent": cpu_percent},
+                methods_attempted=["server_unavailable"],
+                hardware_context=self._hardware_context,
             )
 
 

@@ -1,10 +1,14 @@
 import json
+from pathlib import Path
 
+import jsonschema
 import pytest
 
 from backend.api.investigate import InvestigationResult, LabTarget
 from backend.twin.ground_truth import store
 from backend.twin.runner import experiment
+
+SCHEMA_PATH = Path(__file__).resolve().parents[3] / "experiments" / "schema" / "run_record.schema.json"
 
 RUN_ID = "redis_process_stopped-0001"
 
@@ -84,3 +88,9 @@ def test_full_run_tears_the_stack_down_after_successful_injection(lab_env, run_e
     assert any("down" in call for call in lab_env.calls)
     # Start is called with full container ID
     assert any(call[0] == "start" and "redis" in call[1] for call in lab_env.calls)
+
+
+def test_run_record_validates_against_schema(lab_env, run_env):
+    record = experiment.run("redis_process_stopped", seed=420, run_id=RUN_ID, target=lab_env.target, investigate=experiment.stub_investigate, warmup_seconds=0.0)
+    schema = json.loads(SCHEMA_PATH.read_text())
+    jsonschema.validate(record, schema)

@@ -21,9 +21,11 @@ def main(argv=None):
     redis.add_argument('--redis-name');redis.add_argument('--redis-id')
     worker = parser.add_mutually_exclusive_group(required=True)
     worker.add_argument('--worker-name');worker.add_argument('--worker-id')
-    parser.add_argument('--redis-host', required=True)
-    parser.add_argument('--redis-port', required=True, type=int)
-    parser.add_argument('--helper-image', required=True)
+    parser.add_argument('--redis-host')
+    parser.add_argument('--redis-port', type=int)
+    parser.add_argument('--helper-image')
+    parser.add_argument('--runtime-only', action='store_true',
+                        help='Inspect Redis state without a worker TCP probe when no endpoint is available')
     parser.add_argument('--connection-timeout', type=float, default=1.0)
     parser.add_argument('--probe-deadline', type=float, default=8.0)
     parser.add_argument('--runtime-deadline', type=float, default=3.0)
@@ -33,6 +35,8 @@ def main(argv=None):
     parser.add_argument('--confidence', type=float, default=.95)
     parser.add_argument('--policy', choices=['ratio', 'information_gain', 'weighted', 'fixed'], default='ratio')
     args = parser.parse_args(argv)
+    if not args.runtime_only and not all((args.redis_host, args.redis_port, args.helper_image)):
+        parser.error('--redis-host, --redis-port and --helper-image are required unless --runtime-only is set')
     manager = None
     try:
         loaded = load_catalogues(research_mode=True)
@@ -40,7 +44,7 @@ def main(argv=None):
         config = LiveInvestigationConfig(
             redis_target={'container_id': args.redis_id} if args.redis_id else {'container_name': args.redis_name},
             worker_target={'container_id': args.worker_id} if args.worker_id else {'container_name': args.worker_name},
-            probe_config={'redis_host': args.redis_host, 'redis_port': args.redis_port,
+            probe_config=None if args.runtime_only else {'redis_host': args.redis_host, 'redis_port': args.redis_port,
                           'helper_image': args.helper_image, 'connection_timeout': args.connection_timeout,
                           'execution_deadline': args.probe_deadline},
             maximum_duration_seconds=args.deadline, runtime_deadline_seconds=args.runtime_deadline)

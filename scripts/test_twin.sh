@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # test_twin.sh — Full digital twin test sequence (Phases 1-3)
-# Usage: ./test_twin.sh
+# Usage: ./scripts/test_twin.sh
 # Press Ctrl+C at any time to stop and clean up.
 
 set -euo pipefail
+
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
 
 PROJECT="infrasage-lab"
 COMPOSE_FILES=("-f" "lab/compose.twin.yaml" "-f" "lab/docker-compose.infrasage.yml")

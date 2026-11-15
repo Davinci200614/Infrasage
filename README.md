@@ -128,6 +128,13 @@ Run the combined diagnostic and twin automated tests:
 .venv/bin/python -m pytest -q tests backend/twin/tests
 ```
 
+`pytest.ini` also makes `.venv/bin/python -m pytest -q` discover the same suite.
+Automated tests live in `tests/` and `backend/twin/tests/`. Manual live collector
+checks live in [scripts/manual_checks/](scripts/manual_checks/README.md) and are
+run explicitly. The full live twin lifecycle script is `scripts/test_twin.sh`;
+it starts, faults and tears down the dedicated twin lab.
+
+
 - [Mathematical engine, assumptions and simulation commands](docs/MATHEMATICAL_ENGINE.md)
 - [Live investigation configuration and trace format](docs/PHASE2B2_AUTONOMOUS_INVESTIGATION.md)
 - [Voting App validation, controlled faults and restoration](docs/PHASE2C_VOTING_APP_VALIDATION.md)

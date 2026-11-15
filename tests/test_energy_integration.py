@@ -59,7 +59,7 @@ def test_server_refuses_stop_without_start():
 def client(monkeypatch):
     monkeypatch.setattr(energy_client.EnergyClient, '_collect_hardware_context', lambda self: {})
     monkeypatch.setattr(energy_client, '_DEFAULT_CPU_TDP_WATTS', 65.0)
-    return energy_client.EnergyClient()
+    return energy_client.EnergyClient(allow_estimates=True)
 
 
 def test_unavailable_server_estimate_covers_diagnostic_interval(client, monkeypatch):
@@ -126,3 +126,18 @@ def test_server_configures_package_domains_without_nested_core_counters(monkeypa
     device.configure.assert_called_once_with(['package_0', 'package_1'])
     create_meter.assert_called_once_with([device])
     device.available_domains.assert_not_called()
+
+
+def test_hardware_unavailable_is_not_measured_by_default(monkeypatch):
+    monkeypatch.setattr(energy_client.EnergyClient, '_collect_hardware_context', lambda self: {})
+    monkeypatch.setattr(energy_client.time, 'monotonic', MagicMock(side_effect=[10.0, 12.0]))
+    monkeypatch.setattr(energy_client.requests, 'post', MagicMock(side_effect=requests.ConnectionError('offline')))
+    sample = MagicMock()
+    monkeypatch.setattr(energy_client.psutil, 'cpu_percent', sample)
+    client = energy_client.EnergyClient()
+    assert client.start_measurement() is False
+    reading = client.stop_measurement()
+    assert reading.energy_method == 'not_measured'
+    assert reading.energy_joules is None
+    assert reading.elapsed_seconds == 2.0
+    sample.assert_not_called()

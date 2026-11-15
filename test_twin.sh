@@ -40,7 +40,7 @@ ok "All tools present"
 # ── 1. Unit tests (fake Docker) ────────────────────────────────────────────
 step "Running unit tests (backend/twin/tests)"
 $VENV_PY -m pytest backend/twin/tests -q
-ok "26 tests passed"
+ok "Twin unit tests passed"
 
 # ── 2. Start lab stack ─────────────────────────────────────────────────────
 step "Starting lab stack ($PROJECT)"
@@ -83,7 +83,7 @@ RESULT2=$(sg docker -c "docker exec infrasage-lab-db-1 psql -U postgres -d postg
 [[ "$RESULT2" == "a" ]] || die "Vote didn't recover after revert (got: '$RESULT2')"
 ok "Stack healthy after revert"
 
-# ── 5. Full experiment run (stub diagnostic) ───────────────────────────────
+# ── 5. Full experiment run (real diagnostic) ───────────────────────────────
 step "Running full experiment via experiment.run()"
 RECORD=$($VENV_PY -c "
 from backend.twin.runner import experiment
@@ -106,7 +106,8 @@ echo "  diagnosis:       $DECISION"
 
 [[ "$LAB_STATUS" == "valid" ]] || die "Experiment lab_status=$LAB_STATUS (expected valid)"
 [[ "$GT_LABEL" == "redis_process_stopped" ]] || die "Wrong ground truth label"
-[[ "$DECISION" == "stub_cause" ]] || die "Wrong stub decision"
+# Real diagnostic may abstain (no calibrated likelihoods yet)
+[[ "$DECISION" == "abstain" || "$DECISION" == "$GT_LABEL" ]] || die "Unexpected decision: $DECISION"
 ok "Experiment completed successfully"
 
 # ── 6. Show run record ─────────────────────────────────────────────────────
@@ -119,5 +120,4 @@ cat "experiments/ground_truth/$RUN_ID.json" | jq .
 
 echo
 echo "=== ALL TESTS PASSED ==="
-echo "Lab stack is still running. Press Ctrl+C to tear down, or run:"
-echo "  sg docker -c 'docker compose -p $PROJECT ${COMPOSE_FILES[*]} down -v'"
+echo "The experiment tears down its replica; the exit trap also attempts cleanup."

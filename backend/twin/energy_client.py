@@ -1,7 +1,8 @@
 """Energy measurement client for InfraSage digital twin (Phase 12).
 
 Communicates with the energy measurement server to record per-test energy.
-Falls back to CPU-based estimation when RAPL is unavailable (no root).
+Reports not_measured when RAPL is unavailable. Rough CPU estimates require
+explicit allow_estimates=True and are never reported as measured.
 """
 
 from __future__ import annotations
@@ -44,8 +45,9 @@ class BaselineEnergy:
 class EnergyClient:
     """Client for the energy measurement HTTP server."""
 
-    def __init__(self, base_url: str = "http://127.0.0.1:5001"):
+    def __init__(self, base_url: str = "http://127.0.0.1:5001", *, allow_estimates: bool = False):
         self.base_url = base_url.rstrip("/")
+        self.allow_estimates = allow_estimates
         self._hardware_context = self._collect_hardware_context()
         self._measurement_started = None
         self._server_started = False
@@ -124,6 +126,9 @@ class EnergyClient:
                 methods.append("invalid_or_unavailable_hardware_reading")
             except Exception as error:
                 methods.append(f"request_failed: {error}")
+        if not self.allow_estimates:
+            return EnergyReading(None, "not_measured", elapsed,
+                                 methods + ["hardware_unavailable"], self._hardware_context)
         try:
             # A post-hoc CPU sample is only a rough estimate of interval cost.
             cpu_percent = psutil.cpu_percent(interval=0.1)

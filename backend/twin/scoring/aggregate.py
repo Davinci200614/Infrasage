@@ -16,6 +16,8 @@ def load_runs(split: str | None = None) -> list[dict]:
     for path in RUNS_DIR.glob("*.json"):
         with open(path) as f:
             record = json.load(f)
+        if "validation" in record.get("run_id", ""):
+            continue
         if split is None or record.get("split") == split:
             runs.append(record)
     return runs

@@ -118,3 +118,28 @@ the twin override onto `lab/compose.yaml`.
   independently held-out diagnosis evaluation remain necessary research work.
 - HTTP serving and the InfraSage dashboard remain placeholders. The public Python
   API is functional and separate from an HTTP endpoint.
+
+## Remote main reconciliation
+
+The follow-up merge incorporates remote main `65106d5`, including the latest
+call-time workload seed fix and schema regression test. It preserves validation-run
+filtering and persists each self-validation result. Completed probe observations
+remain eligible for calibration even when the final diagnosis abstains; excluding
+those runs would bias the data. Failed probes and unverified injections remain
+excluded. Runtime symptom/isolation checks still report unverified.
+
+Unavailable hardware energy now defaults to `not_measured`, following the remote
+branch's policy. The rough CPU fallback requires `EnergyClient(allow_estimates=True)`
+and is always labeled `estimated`. The obsolete twin energy-server shim is removed;
+the shared energy server remains. Remote dependency pins are retained along with
+the diagnostic API dependencies. The live twin script accepts either the injected
+cause or abstention as lifecycle completion, without asserting diagnostic accuracy.
+
+The README also states the measured model reachability limitation: no combination
+of the current three checks reaches the default 95% posterior threshold.
+
+Reconciliation validation: **441 tests passed in 118.73 seconds** using the
+resolved main worktree and the existing integration virtual environment. Dependency
+requirements, catalogue consistency, twin Compose configuration, Python compilation
+and shell syntax checks passed. Tests used fake Docker and localhost HTTP fixtures;
+no live fault, repair, or hardware-energy experiment was run.

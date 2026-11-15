@@ -8,7 +8,7 @@ workload:
   target: "http://127.0.0.1:8080"   # vote frontend
   rate_per_second: 2
   warmup_seconds: 30
-  seed: 421
+  seed: 420
   # Votes are submitted as a deterministic sequence from `seed`.
 
 timeouts_seconds:

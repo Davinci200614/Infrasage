@@ -93,6 +93,11 @@ real Voting App validation scenarios abstained, and some fault probes failed or
 timed out. This is a working investigation pipeline, not validated production
 root-cause diagnosis.
 
+With the current default priors and three live checks, the highest attainable
+posterior is about 90.13%, below the 95% diagnosis threshold. The default live
+configuration therefore always abstains; the planner still selects checks, but
+additional discriminating evidence and a validated model are required for diagnosis.
+
 ## Troubleshooting
 
 - **Docker unavailable:** start Docker and check your user’s Docker access.
@@ -147,7 +152,8 @@ to the demo Compose file. Optional Netdata starts only with `--profile monitorin
 The twin retains its experiment runner, repair catalogue and validator, ground
 truth store, split assignment, schema, aggregation and optional energy path.
 Hardware energy readings describe host CPU package energy over a diagnostic
-interval. CPU-based fallback values are rough estimates, labeled `estimated`;
+interval. Unavailable hardware readings default to `not_measured`. CPU-based fallback
+requires explicit opt-in and produces rough values labeled `estimated`;
 neither establishes attributable per-test energy savings. Energy telemetry errors
 do not discard valid diagnostic evidence.
 

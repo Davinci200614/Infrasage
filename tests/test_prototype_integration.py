@@ -211,3 +211,18 @@ def test_worker_runtime_uses_shared_verified_pipeline_without_tcp_configuration(
     assert result.result.observations[0].execution_status == ExecutionStatus.COMPLETED
     assert result.result.observations[0].observed_outcome == 'stopped'
     assert result.result.final_beliefs != loaded.initial_prior
+
+
+def test_abstention_does_not_discard_valid_calibration_observations():
+    from backend.twin.scoring.aggregate import compute_likelihood_tables
+    run = calibration_run()
+    run['diagnosis']['abstained'] = True
+    assert compute_likelihood_tables([run]) == compute_likelihood_tables([calibration_run()])
+
+
+def test_validation_runs_are_excluded_from_loading(tmp_path, monkeypatch):
+    from backend.twin.scoring import aggregate
+    monkeypatch.setattr(aggregate, 'RUNS_DIR', tmp_path)
+    for rid in ('validation-repro-001', 'redis_process_stopped-0001'):
+        (tmp_path / (rid + '.json')).write_text(json.dumps({'run_id': rid}))
+    assert [run['run_id'] for run in aggregate.load_runs()] == ['redis_process_stopped-0001']

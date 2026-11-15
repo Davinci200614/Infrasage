@@ -47,10 +47,6 @@ def _start_energy_server() -> EnergyClient:
     global _ENERGY_SERVER_PROC, _ENERGY_SERVER_THREAD
     
     server_script = Path(__file__).resolve().parents[2] / "energy" / "meter.py"
-    if not server_script.exists():
-        # Fallback to the twin's energy_server.py if energy/meter.py not found
-        server_script = Path(__file__).resolve().parents[1] / "energy_server.py"
-    
     _ENERGY_SERVER_PROC = subprocess.Popen(
         [_PYTHON_EXE, str(server_script)],
         stdout=subprocess.DEVNULL,
@@ -109,7 +105,7 @@ def stub_investigate(target: LabTarget, energy_client=None) -> InvestigationResu
 def run(
     fault_name: str,
     *,
-    seed: int = int(WORKLOAD["seed"]),
+    seed: int | None = None,
     target: str | None = None,
     investigate: InvestigateFn = real_investigate,
     run_id: str | None = None,
@@ -120,6 +116,8 @@ def run(
     faults = catalogues.load("faults")["faults"]
     fault = faults[fault_name]
     rid = run_id or _next_run_id(fault_name)
+    if seed is None:
+        seed = int(WORKLOAD["seed"])
     record = {
         "schema_version": SCHEMA_VERSION,
         "run_id": rid,

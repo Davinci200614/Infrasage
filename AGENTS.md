@@ -4,10 +4,10 @@
 
 InfraSage: a Bayesian troubleshooting system that diagnoses Linux/Docker
 infrastructure incidents and abstains when it cannot tell. The diagnostic
-packages are still stubs; the digital twin (`backend/twin/`, `lab/`) is built
-incrementally — `backend/twin/STATUS.md` records the last build-order step that
-passed. Check a file before assuming code exists, and build tooling rather than
-"fixing" something that looks broken.
+backend is implemented; the digital twin (`backend/twin/`, `lab/`) is complete
+through step 13 of its build order — `backend/twin/STATUS.md` records the last
+build-order step that passed. Check a file before assuming code exists, and
+build tooling rather than "fixing" something that looks broken.
 
 ## Read this first
 
@@ -36,9 +36,9 @@ twin** (`backend/twin/`) runs offline calibration and later selective validation
 Key invariants:
 
 - **One orchestrator.** No second "collection orchestrator" with investigation
-  state. The teammate's `CollectionOrchestrator` (branch
-  `feature/docker-collector`, not yet merged) becomes the batch collection
-  implementation behind `CollectorManager`.
+  state. The teammate's `CollectionOrchestrator` (merged from
+  `feature/docker-collector`) is the batch collection implementation behind
+  `CollectorManager`.
 - **Three catalogues**, linked by stable IDs:
   - `knowledge.yaml` — hypotheses + qualitative `supports`/`contradicts` relations
   - `tests.yaml` — executable bindings: provider, operation, outcomes, costs
@@ -74,8 +74,8 @@ is deferred; confirm it adds discriminating evidence before building it.
 
 ## Commands
 
-`requirements.txt` holds the twin's Python dependencies (pytest, PyYAML). The
-shared test command is:
+`requirements.txt` holds the twin's Python dependencies (pytest, PyYAML,
+psutil, pyJoules, docker, requests, jsonschema). The shared test command is:
 
 ```sh
 .venv/bin/python -m pytest backend/twin/tests -q
@@ -130,9 +130,7 @@ run script.
 ## Unresolved, ask before inventing
 
 - The investigation entry point is `backend/api/investigate.py`
-  (`investigate(LabTarget) -> InvestigationResult`), still raising
-  `NotImplementedError` — brief §21 Q3. Do not widen the twin's access to
-  diagnostic internals; implement behind that signature.
+  (`investigate(LabTarget) -> InvestigationResult`), now fully implemented.
 - The other §21 open questions (lab host, Netdata, `alpha`, timeouts) apply to
   whatever part you touch.
 

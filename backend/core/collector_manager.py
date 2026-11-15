@@ -101,6 +101,7 @@ class CollectorManager:
         if not self._valid_binding(binding):
             return self._result(test_id, "unavailable", error="Malformed or missing verified live binding")
         operations = {"redis_runtime_state": "container_process_state",
+                      "worker_runtime_state": "container_process_state",
                       "worker_redis_connectivity": "worker_to_redis_tcp"}
         if (definition.get("provider") != "docker"
                 or test_id not in operations
@@ -374,12 +375,12 @@ class CollectorManager:
             return self._result(test_id, "unavailable", error="Verification requires explicit loaded research catalogues")
         self._verified_definitions.pop(test_id, None)
         original = self.catalogue.test_metadata.get(test_id)
-        if (test_id != "redis_runtime_state" or not isinstance(original, dict)
+        if (test_id not in ("redis_runtime_state", "worker_runtime_state") or not isinstance(original, dict)
                 or not isinstance(original.get("execution"), dict)
                 or not isinstance(original.get("availability"), dict)
                 or original["execution"].get("logical_operation") != "container_process_state"
                 or original["availability"].get("simulation") is not True):
-            return self._result(test_id, "unavailable", error="Only the Redis runtime operation can be verified in Phase 2A")
+            return self._result(test_id, "unavailable", error="Only container runtime operations can be verified")
         if not isinstance(target, dict) or not any(target.get(k) for k in ("container_id", "container_name")):
             return self._result(test_id, "unavailable", error="Explicit Docker target required")
         try:
@@ -508,6 +509,7 @@ class CollectorManager:
         """Pure configuration/pathway check, NOT live verification or diagnostic I/O."""
         test_id = self._get_test_id(test)
         operations = {'redis_runtime_state': 'container_process_state',
+                      'worker_runtime_state': 'container_process_state',
                       'worker_redis_connectivity': 'worker_to_redis_tcp'}
         def answer(eligible, reason):
             return {'eligible': eligible, 'reason': reason, 'verification_performed': False}
@@ -557,7 +559,7 @@ class CollectorManager:
             if remaining <= 0:
                 raise TimeoutError('Diagnostic execution deadline exhausted before verification')
             provider.client.api.timeout = remaining
-            if test_id == 'redis_runtime_state':
+            if test_id in ('redis_runtime_state', 'worker_runtime_state'):
                 result = self.verify_runtime_binding(test, target)
             else:
                 result = self.verify_connectivity_binding(test, target, **probe_config,

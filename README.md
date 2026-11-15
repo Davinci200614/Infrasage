@@ -62,9 +62,10 @@ Start the Voting App
     → Return a diagnosis or ABSTAIN with a detailed JSON trace
 ```
 
-An investigation currently has two connected live checks:
+An investigation currently has three connected live checks:
 
 - Is the Redis container running?
+- Is the worker container running?
 - Can a disposable helper in the worker’s network namespace connect to Redis?
 
 If Redis has no current IP address (for example, after it stops), investigation
@@ -75,7 +76,7 @@ The launcher runs one investigation and then exits. **Continuous monitoring,
 automatic incident detection and automatic repairs are not implemented.**
 The web dashboard is not started by this launcher; the investigation output is
 printed in the terminal.
-The API and InfraSage dashboard are currently empty placeholders; you do not need
+The HTTP server and InfraSage dashboard are currently empty placeholders; you do not need
 Node.js or a separate web server to run this pipeline. The Vote and Result pages
 are provided by the Voting App containers.
 
@@ -116,10 +117,10 @@ Run the mathematical example without Docker:
 .venv/bin/python -m backend.diagnosis.example
 ```
 
-Run the automated tests:
+Run the combined diagnostic and twin automated tests:
 
 ```bash
-.venv/bin/python -m pytest -q tests
+.venv/bin/python -m pytest -q tests backend/twin/tests
 ```
 
 - [Mathematical engine, assumptions and simulation commands](docs/MATHEMATICAL_ENGINE.md)
@@ -127,3 +128,34 @@ Run the automated tests:
 - [Voting App validation, controlled faults and restoration](docs/PHASE2C_VOTING_APP_VALIDATION.md)
 - [Worker-to-Redis diagnostic and helper details](docs/PHASE2B1_WORKER_REDIS_CONNECTIVITY.md)
 - [Pipeline fault-test results and readiness improvements](docs/PIPELINE_READINESS.md)
+
+## Integrated prototype
+
+The public Python entry point `backend.api.investigate.investigate(LabTarget)` now
+connects the twin to the same live orchestrator, collectors, adapter and Bayesian
+engine used by the CLI. It resolves project containers and a locally verified,
+immutable helper image instead of relying on a machine-specific image ID. Missing
+helper/endpoint prerequisites disable TCP probing while retaining runtime checks.
+
+The demo lab uses `lab/compose.yaml`, pinned prebuilt images and an ownership
+manifest. The disposable twin uses `lab/compose.twin.yaml` plus
+`lab/docker-compose.infrasage.yml`, vendored service sources and the fixed
+`infrasage-lab` project. Use the instructions in [lab/README.md](lab/README.md)
+for the twin. The two labs have separate lifecycles; never apply the twin override
+to the demo Compose file. Optional Netdata starts only with `--profile monitoring`.
+
+The twin retains its experiment runner, repair catalogue and validator, ground
+truth store, split assignment, schema, aggregation and optional energy path.
+Hardware energy readings describe host CPU package energy over a diagnostic
+interval. CPU-based fallback values are rough estimates, labeled `estimated`;
+neither establishes attributable per-test energy savings. Energy telemetry errors
+do not discard valid diagnostic evidence.
+
+The four earlier saved readiness scenarios used two probes. They remain historical
+evidence, not validation of the integrated three-probe version. The combined tests
+exercise software contracts with fake Docker and local HTTP fixtures. Fresh live
+experiments are required before reporting diagnosis accuracy, calibrated models,
+validated repairs or energy savings for this merged version. Some twin
+self-validation checks explicitly remain unverified.
+
+See [the merge report](docs/PROTOTYPE_INTEGRATION.md) for scope and validation.

@@ -1,0 +1,91 @@
+# Fault catalogue (guide §7). Each entry is a fixed contract; experiment scripts
+# must not invent faults. Editing an entry is a new version and invalidates the
+# calibration that used it.
+
+version: 1
+
+faults:
+  redis_process_stopped:
+    version: 1
+    target_service: redis
+    injection:
+      method: docker_stop
+      parameters: {}
+    revert:
+      method: docker_start
+    expected_symptom: "vote frontend errors, result stops updating"
+    label_component: redis
+    label_cause: redis_process_stopped
+    applicable_to_v0_1: true
+
+  postgres_unavailable:
+    version: 1
+    target_service: db
+    injection:
+      method: docker_stop
+      parameters: {}
+    revert:
+      method: docker_start
+    expected_symptom: "worker keeps retrying the database, result stops updating"
+    label_component: db
+    label_cause: postgres_process_stopped
+    applicable_to_v0_1: true
+
+  worker_process_stopped:
+    version: 1
+    target_service: worker
+    injection:
+      method: docker_stop
+      parameters: {}
+    revert:
+      method: docker_start
+    expected_symptom: "votes not processed, result stops updating"
+    label_component: worker
+    label_cause: worker_process_stopped
+    applicable_to_v0_1: true
+
+  redis_network_unreachable:
+    version: 1
+    target_service: worker
+    injection:
+      method: network_partition
+      parameters:
+        block_from: worker
+        block_to: redis
+    revert:
+      method: network_partition_revert
+    expected_symptom: "worker cannot reach Redis, vote frontend errors"
+    label_component: network
+    label_cause: worker_redis_network_failure
+    applicable_to_v0_1: true
+
+  connectivity_or_endpoint:
+    version: 1
+    target_service: worker
+    injection:
+      method: dns_override
+      parameters:
+        target: redis
+        wrong_ip: "10.255.255.1"
+    revert:
+      method: dns_override_revert
+    expected_symptom: "worker resolves redis to wrong IP, connection refused"
+    label_component: configuration
+    label_cause: worker_redis_endpoint_wrong
+    applicable_to_v0_1: true
+
+  other_unknown:
+    version: 1
+    target_service: worker
+    injection:
+      method: chaos
+      parameters:
+        action: kill -STOP
+    revert:
+      method: chaos_revert
+      parameters:
+        action: kill -CONT
+    expected_symptom: "unmodeled behavior, diagnosis should abstain"
+    label_component: other
+    label_cause: other_unknown
+    applicable_to_v0_1: true

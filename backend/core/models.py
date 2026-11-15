@@ -65,6 +65,7 @@ class Observation:
     observed_outcome: str | None = None
     duration_seconds: float = 0.0
     measured_energy_joules: float | None = None
+    energy_method: str = "not_measured"
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
@@ -75,6 +76,8 @@ class Observation:
         validate_cost(self.duration_seconds, 'duration')
         if self.measured_energy_joules is not None:
             validate_cost(self.measured_energy_joules, 'measured energy')
+        if self.energy_method not in ("measured", "estimated", "not_measured"):
+            raise ValueError(f'Invalid energy_method: {self.energy_method}')
 
 
 @dataclass(frozen=True)

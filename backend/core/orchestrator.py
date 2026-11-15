@@ -118,6 +118,7 @@ class LiveInvestigationConfig:
     probe_config: dict | None = None
     maximum_duration_seconds: float = 30.0
     runtime_deadline_seconds: float = 3.0
+    include_worker_runtime: bool = False
 
     def __post_init__(self):
         for name in ('maximum_duration_seconds', 'runtime_deadline_seconds'):
@@ -141,14 +142,13 @@ class LiveInvestigationResult:
 def run_live_investigation(catalogues, manager, configuration: LiveInvestigationConfig,
                            policy: DiagnosticPolicy | None = None,
                            stopping: StoppingConfig | None = None,
-                           initial_evidence: Sequence = ()) -> LiveInvestigationResult:
-    """Plan, execute and admit each supported diagnostic at most once.
+                           initial_evidence: Sequence = (),
+                           energy_measure=None) -> LiveInvestigationResult:
+    """Execute each supported diagnostic once, with optional energy accounting.
 
-    Capability checks are pure configuration checks. Selected binding verification
-    is the ONE charged diagnostic action and supplies its evidence: no subsequent
-    execute_test call duplicates it. Initial records must carry raw Phase 2A/2B.1
-    provenance and are revalidated; accepted unique records consume an attempt and
-    their estimated cost. Rejected initial records do not consume new work.
+    The measurement callback executes the supplied action exactly once and returns
+    (raw_evidence, energy_joules, energy_method). Evidence still goes through the
+    same provenance and freshness checks as unmeasured actions.
     """
     from dataclasses import replace
     import time
@@ -165,6 +165,8 @@ def run_live_investigation(catalogues, manager, configuration: LiveInvestigation
     config = stopping or StoppingConfig()
     selection_policy = policy or DiagnosticPolicy('ratio')
     supported = ('redis_runtime_state', 'worker_redis_connectivity')
+    if configuration.include_worker_runtime:
+        supported += ('worker_runtime_state',)
     tests = {tid: catalogues.tests[tid] for tid in supported if tid in catalogues.tests}
     beliefs = dict(catalogues.initial_prior)
     validate_distribution(beliefs)
@@ -187,10 +189,12 @@ def run_live_investigation(catalogues, manager, configuration: LiveInvestigation
                       'elapsed_seconds': time.monotonic() - started, **details})
 
     def target_for(tid):
-        return configuration.redis_target if tid == 'redis_runtime_state' else configuration.worker_target
+        if tid == 'redis_runtime_state':
+            return configuration.redis_target
+        return configuration.worker_target
 
     def action_deadline(tid):
-        if tid == 'redis_runtime_state':
+        if tid in ('redis_runtime_state', 'worker_runtime_state'):
             return configuration.runtime_deadline_seconds
         probe = configuration.probe_config
         return probe.get('execution_deadline') if isinstance(probe, dict) else None
@@ -204,9 +208,17 @@ def run_live_investigation(catalogues, manager, configuration: LiveInvestigation
                                              probe_config=configuration.probe_config,
                                              deadline_seconds=action_deadline(tid))
 
-    def normalize(tid, raw):
+    def normalize(tid, raw, measured_energy_joules=None, energy_method="not_measured"):
         try:
-            return adapter.adapt_with_metadata(tests[tid], raw, target_for(tid))
+            normalized = adapter.adapt_with_metadata(tests[tid], raw, target_for(tid))
+            # Add measured energy to the observation if provided
+            if measured_energy_joules is not None:
+                obs = normalized.observation
+                # Create new observation with energy fields (Observation is frozen)
+                from dataclasses import replace
+                new_obs = replace(obs, measured_energy_joules=measured_energy_joules, energy_method=energy_method)
+                return NormalizedObservation(new_obs, normalized.metadata)
+            return normalized
         except Exception as error:
             target = target_for(tid) or {}
             label = ('docker:' + str(target['container_id']) if target.get('container_id')
@@ -359,17 +371,32 @@ def run_live_investigation(catalogues, manager, configuration: LiveInvestigation
               policy=selection.policy, policy_score=selection.score,
               expected_energy_joules=selection.expected_energy_joules,
               expected_latency_seconds=selection.expected_latency_seconds, target=target_for(tid))
+        test_energy_joules = None
+        test_energy_method = "not_measured"
         try:
-            raw = manager.execute_investigation_test(test, target_for(tid),
-                                                     probe_config=configuration.probe_config,
-                                                     deadline_seconds=min(action_deadline(tid),
-                                                                          max(0, deadline - time.monotonic())))
+            if energy_measure:
+                raw, test_energy_joules, test_energy_method = energy_measure(
+                    tid,
+                    lambda: manager.execute_investigation_test(
+                        test, target_for(tid),
+                        probe_config=configuration.probe_config,
+                        deadline_seconds=min(action_deadline(tid),
+                                             max(0, deadline - time.monotonic()))
+                    )
+                )
+            else:
+                raw = manager.execute_investigation_test(test, target_for(tid),
+                                                         probe_config=configuration.probe_config,
+                                                         deadline_seconds=min(action_deadline(tid),
+                                                                              max(0, deadline - time.monotonic())))
         except Exception as error:
             raw = {'test_id': tid, 'status': 'failed', 'error': str(error)}
         event('action', test_id=tid, execution_status=raw.get('status') if isinstance(raw, dict) else 'failed',
               phase=raw.get('action_phase') if isinstance(raw, dict) else 'malformed_result',
               accounting='one charged attempt; verification evidence consumed without another execution')
-        account(tid, normalize(tid, raw), selected=True)
+        # Pass measured energy to normalize for inclusion in frozen observation
+        normalized = normalize(tid, raw, test_energy_joules, test_energy_method)
+        account(tid, normalized, selected=True)
 
     leader = sorted(beliefs, key=lambda h: (-beliefs[h], h))[0] if decision == Decision.DIAGNOSED else None
     result = InvestigationResult(decision, reason, leader, beliefs, history, observations, selections, energy, latency)

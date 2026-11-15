@@ -30,7 +30,7 @@ def main(argv=None):
     parser.add_argument('--probe-deadline', type=float, default=8.0)
     parser.add_argument('--runtime-deadline', type=float, default=3.0)
     parser.add_argument('--deadline', type=float, default=30.0)
-    parser.add_argument('--max-tests', type=int, default=2)
+    parser.add_argument('--max-tests', type=int, default=3)
     parser.add_argument('--max-energy', type=float, default=1.0)
     parser.add_argument('--confidence', type=float, default=.95)
     parser.add_argument('--policy', choices=['ratio', 'information_gain', 'weighted', 'fixed'], default='ratio')
@@ -47,8 +47,8 @@ def main(argv=None):
             probe_config=None if args.runtime_only else {'redis_host': args.redis_host, 'redis_port': args.redis_port,
                           'helper_image': args.helper_image, 'connection_timeout': args.connection_timeout,
                           'execution_deadline': args.probe_deadline},
-            maximum_duration_seconds=args.deadline, runtime_deadline_seconds=args.runtime_deadline)
-        policy = DiagnosticPolicy(args.policy, ('redis_runtime_state', 'worker_redis_connectivity'), .02, .01)
+            maximum_duration_seconds=args.deadline, runtime_deadline_seconds=args.runtime_deadline, include_worker_runtime=True)
+        policy = DiagnosticPolicy(args.policy, ('redis_runtime_state', 'worker_runtime_state', 'worker_redis_connectivity'), .02, .01)
         result = run_live_investigation(loaded, manager, config, policy,
                                        StoppingConfig(confidence_threshold=args.confidence,
                                                       max_tests=args.max_tests, max_energy_joules=args.max_energy))

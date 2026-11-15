@@ -1,0 +1,19 @@
+# Experiment catalogue: workload + step timeouts (guide §6, §8.2).
+# Versioned on purpose: changing any value here changes what a run means, so it
+# is recorded with every run record.
+
+version: 1
+
+workload:
+  target: "http://127.0.0.1:8080"   # vote frontend
+  rate_per_second: 2
+  warmup_seconds: 30
+  seed: 421
+  # Votes are submitted as a deterministic sequence from `seed`.
+
+timeouts_seconds:
+  stack_up: 120          # compose up -d --wait
+  baseline_vote: 30      # vote -> redis -> worker -> db -> result, cold stack
+  injection_verify: 15   # docker stop/pause + inspect
+  investigation: 120     # collectors + posterior + planner
+  teardown: 30           # down -v

@@ -26,6 +26,9 @@ class DiagnosticAdapter:
         self.outcome_mappings = {"redis_runtime_state": {
             "type": "field", "field": "status",
             "values": {"running": "running", "exited": "stopped", "restarting": "restarting"}},
+            "worker_runtime_state": {
+            "type": "field", "field": "status",
+            "values": {"running": "running", "exited": "stopped", "restarting": "restarting"}},
             "worker_redis_connectivity": {"type": "field", "field": "outcome",
                                           "values": {key: key for key in ("connected", "refused", "timeout")}}}
         if outcome_mappings is not None:
@@ -278,6 +281,7 @@ class DiagnosticAdapter:
                 or execution_result.get("docker_endpoint") != binding["docker_endpoint"]):
             return finish(ExecutionStatus.FAILED, "missing_or_mismatched_verified_binding")
         expected_operation = {"redis_runtime_state": "container_process_state",
+                              "worker_runtime_state": "container_process_state",
                               "worker_redis_connectivity": "worker_to_redis_tcp"}.get(test.identifier)
         if binding["operation"] != expected_operation:
             return finish(ExecutionStatus.FAILED, "test_binding_operation_mismatch")

@@ -114,16 +114,17 @@ class FakeDocker:
                     return "\n", 0
                 match = re.search(r"id = '([^']*)'", command[-1])
                 return self.votes.get(match.group(1), "") + "\n" if match else "\n", 0
-        if head == "start":
-            self.running[_service_from_cid(args[1])] = True
+        if args[0] == "start":
+            # start command: docker start <container>
+            self.running[args[1]] = True
             return "", 0
-        if head == "network":
+        if args[0] == "network":
             # network connect/disconnect - just succeed
             return "", 0
-        if head == "kill":
+        if args[0] == "kill":
             # kill --signal=CONT - just succeed
             return "", 0
-        if head == "inspect":
+        if args[0] == "inspect":
             # Handle network inspect for network_connected verification
             if len(args) >= 3 and args[1] == "-f" and "{{json" in args[2]:
                 # Return fake network config showing back-tier is connected

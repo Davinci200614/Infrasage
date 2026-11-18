@@ -64,7 +64,6 @@ def investigate(target: LabTarget, energy_client=None) -> InvestigationResult:
     from backend.core.collection_orchestrator import CollectionOrchestrator
     from backend.diagnosis.catalogue_loader import load_catalogues
     from backend.optimization.planner import DiagnosticPolicy
-    from backend.core.models import ExecutionStatus as CoreExecutionStatus
 
     # Load catalogues in research mode (required by Phase 1 loader)
     catalogues = load_catalogues(research_mode=True)
@@ -104,15 +103,11 @@ def investigate(target: LabTarget, energy_client=None) -> InvestigationResult:
     )
 
     # Energy measurement callback
-    energy_measure = None
-    if energy_client:
-        def energy_measure(tid, test_func):
-            energy_client.start_measurement()
-            raw = test_func()
-            reading = energy_client.stop_measurement()
-            return raw, reading.energy_joules, reading.energy_method
-    else:
-        energy_measure = None
+    def energy_measure(tid, test_func):
+        energy_client.start_measurement()
+        raw = test_func()
+        reading = energy_client.stop_measurement()
+        return raw, reading.energy_joules, reading.energy_method
 
     # Run the live investigation
     start = time.monotonic()

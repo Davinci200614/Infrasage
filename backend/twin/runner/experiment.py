@@ -12,7 +12,6 @@ import json
 import os
 import subprocess
 import sys
-import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -21,7 +20,7 @@ import yaml
 
 from backend.api.investigate import investigate as real_investigate, InvestigationResult, LabTarget, TestResult
 from backend.twin import LAB, ROOT, catalogues
-from backend.twin.energy_client import EnergyClient, BaselineEnergy
+from backend.twin.energy_client import EnergyClient
 from backend.twin.ground_truth import store
 from backend.twin.injector import injector
 from backend.twin.runner import lab
@@ -38,13 +37,12 @@ WORKLOAD = catalogues.load("workloads")["workload"]
 InvestigateFn = Callable[[LabTarget, EnergyClient | None], InvestigationResult]
 
 _ENERGY_SERVER_PROC: subprocess.Popen | None = None
-_ENERGY_SERVER_THREAD: threading.Thread | None = None
 _PYTHON_EXE = os.environ.get("INFRASAGE_ENERGY_PYTHON", sys.executable)
 
 
 def _start_energy_server() -> EnergyClient:
     """Start the energy measurement server as a background process."""
-    global _ENERGY_SERVER_PROC, _ENERGY_SERVER_THREAD
+    global _ENERGY_SERVER_PROC
     
     server_script = Path(__file__).resolve().parents[2] / "energy" / "meter.py"
     if not server_script.exists():
@@ -72,7 +70,7 @@ def _start_energy_server() -> EnergyClient:
 
 def _stop_energy_server() -> None:
     """Stop the energy measurement server. Idempotent."""
-    global _ENERGY_SERVER_PROC, _ENERGY_SERVER_THREAD
+    global _ENERGY_SERVER_PROC
     if _ENERGY_SERVER_PROC:
         proc = _ENERGY_SERVER_PROC
         _ENERGY_SERVER_PROC = None

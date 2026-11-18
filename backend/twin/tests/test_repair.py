@@ -1,6 +1,5 @@
 """Tests for the repair validator (guide §12)."""
 
-import pytest
 from backend.twin.repair import validator
 from backend.twin import catalogues
 

@@ -6,12 +6,11 @@ Falls back to CPU-based estimation when RAPL is unavailable (no root).
 
 from __future__ import annotations
 
+import math
 import os
 import platform
-import subprocess
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Any
 
 import psutil
@@ -43,8 +42,9 @@ class BaselineEnergy:
 class EnergyClient:
     """Client for the energy measurement HTTP server."""
 
-    def __init__(self, base_url: str = "http://127.0.0.1:5001"):
+    def __init__(self, base_url: str = "http://127.0.0.1:5001", *, allow_estimates: bool = False):
         self.base_url = base_url.rstrip("/")
+        self.allow_estimates = allow_estimates
         self._hardware_context = self._collect_hardware_context()
 
     def _collect_hardware_context(self) -> dict[str, Any]:
@@ -120,46 +120,56 @@ class EnergyClient:
 
     def start_measurement(self) -> bool:
         """Start an energy measurement interval. Returns True if started."""
+        self._measurement_started = time.monotonic()
+        self._server_started = False
         try:
             resp = requests.post(f"{self.base_url}/measure/start", timeout=3)
-            return resp.status_code == 200
+            if resp.status_code == 200:
+                self._server_started = True
+                return True
+            return False
         except Exception:
             return False
 
     def stop_measurement(self) -> EnergyReading:
-        """Stop the active measurement and return the reading."""
-        start_time = time.monotonic()
+        """Return optional hardware energy or a clearly labeled host CPU estimate."""
+        if not hasattr(self, '_measurement_started') or self._measurement_started is None:
+            return EnergyReading(None, "not_measured", 0.0, ["no_active_interval"], self._hardware_context)
+        started, self._measurement_started = self._measurement_started, None
+        elapsed = max(0.0, time.monotonic() - started)
         methods = []
-
+        if self._server_started:
+            self._server_started = False
+            try:
+                resp = requests.post(f"{self.base_url}/measure/stop", timeout=1)
+                data = resp.json() if resp.status_code == 200 else {}
+                value = data.get("energy_microjoules")
+                if (data.get("method") == "measured" and isinstance(value, (float, int))
+                        and not isinstance(value, bool) and math.isfinite(value) and value >= 0):
+                    return EnergyReading(value / 1_000_000, "measured", elapsed,
+                                         ["pyJoules/RAPL"], {**self._hardware_context,
+                                         "scope": "host_cpu_packages"})
+                methods.append("invalid_or_unavailable_hardware_reading")
+            except Exception as error:
+                methods.append(f"request_failed: {error}")
+        if not self.allow_estimates:
+            return EnergyReading(None, "not_measured", elapsed,
+                                 methods + ["hardware_unavailable"], self._hardware_context)
         try:
-            resp = requests.post(f"{self.base_url}/measure/stop", timeout=5)
-            elapsed = time.monotonic() - start_time
-            if resp.status_code == 200:
-                data = resp.json()
-                return EnergyReading(
-                    energy_joules=data.get("energy_microjoules", 0) / 1_000_000,
-                    energy_method=data.get("method", "measured"),
-                    elapsed_seconds=data.get("elapsed_seconds", elapsed),
-                    methods_attempted=["pyJoules/RAPL"],
-                    hardware_context=self._hardware_context,
-                )
-            methods.append(f"server_error_{resp.status_code}")
-        except Exception as e:
-            elapsed = time.monotonic() - start_time
-            methods.append(f"request_failed: {e}")
-
-        # Fallback: honest "not measured" — 0.1s sample × elapsed is noise, not data
-        methods.append("server_unavailable")
-        return EnergyReading(
-            energy_joules=None,
-            energy_method="not_measured",
-            elapsed_seconds=elapsed,
-            methods_attempted=methods,
-            hardware_context=self._hardware_context,
-        )
+            # A post-hoc CPU sample is only a rough estimate of interval cost.
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            estimated = _DEFAULT_CPU_TDP_WATTS * (cpu_percent / 100) * elapsed
+            if not math.isfinite(estimated) or estimated < 0:
+                raise ValueError("Invalid CPU estimate")
+            return EnergyReading(estimated, "estimated", elapsed, methods + ["estimated_from_cpu"],
+                                 {**self._hardware_context, "cpu_percent": cpu_percent,
+                                  "scope": "host_cpu_estimate", "tdp_watts": _DEFAULT_CPU_TDP_WATTS})
+        except Exception as error:
+            return EnergyReading(None, "not_measured", elapsed, methods + [str(error)], self._hardware_context)
 
     def measure_interval(self, duration_seconds: float) -> EnergyReading:
         """Convenience: measure energy over a fixed interval (start + sleep + stop)."""
+        start = time.monotonic()
         if self.start_measurement():
             time.sleep(duration_seconds)
             return self.stop_measurement()

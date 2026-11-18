@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import yaml
-from pathlib import Path
 
 from backend.twin import LAB_PROJECT, catalogues, docker
 from backend.twin.runner import lab

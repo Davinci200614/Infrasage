@@ -60,7 +60,7 @@ def _apply_network_partition(fault: dict, project: str) -> tuple[str, str]:
     injected_at = _now()
     # Disconnect worker from back-tier network
     _check(docker.run("network", "disconnect", "infrasage-lab_back-tier", worker_cid, timeout=_timeout()),
-           f"network disconnect worker from back-tier")
+           "network disconnect worker from back-tier")
     # Verify: worker should not be able to reach redis
     # Check network config - worker should not have back-tier network
     proc = docker.run("inspect", "-f", "{{json .NetworkSettings.Networks}}", worker_cid)
@@ -81,7 +81,7 @@ def _revert_network_partition(fault: dict, project: str) -> tuple[str, str]:
     reverted_at = _now()
     # Reconnect worker to back-tier network
     _check(docker.run("network", "connect", "infrasage-lab_back-tier", worker_cid, timeout=_timeout()),
-           f"network connect worker to back-tier")
+           "network connect worker to back-tier")
     # Verify: worker should be connected to back-tier again
     proc = docker.run("inspect", "-f", "{{json .NetworkSettings.Networks}}", worker_cid)
     if proc.returncode == 0:

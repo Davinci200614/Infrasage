@@ -46,7 +46,7 @@ def test_label_timing_and_run_record_contents(lab_env, run_env, tmp_path, monkey
         seen["label_exists_at_investigation"] = store.path_for(RUN_ID).exists()
         return experiment.stub_investigate(target)
 
-    record = experiment.run(
+    _ = experiment.run(
         "redis_process_stopped", seed=420, run_id=RUN_ID, target=lab_env.target, investigate=stub, warmup_seconds=0.0
     )
     assert seen["label_exists_at_investigation"] is True

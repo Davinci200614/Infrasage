@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://infrasage.dev/schema/run_record.schema.json",
   "title": "InfraSage Run Record",
-  "description": "Schema for a single fault injection experiment run record (guide §11).",
+  "description": "Schema for a single fault injection experiment run record (guide \u00a711).",
   "type": "object",
   "required": [
     "schema_version",
@@ -35,7 +35,10 @@
     },
     "split": {
       "type": "string",
-      "enum": ["calibration", "evaluation"],
+      "enum": [
+        "calibration",
+        "evaluation"
+      ],
       "description": "Data split: calibration (fit likelihoods) or evaluation (report metrics)"
     },
     "seed": {
@@ -54,7 +57,9 @@
     },
     "environment": {
       "type": "string",
-      "enum": ["voting-app-v0.1"],
+      "enum": [
+        "voting-app-v0.1"
+      ],
       "description": "Target environment identifier"
     },
     "target_commit": {
@@ -68,12 +73,22 @@
     },
     "lab_status": {
       "type": "string",
-      "enum": ["valid", "invalid_baseline", "injection_failed", "dirty", "error"],
+      "enum": [
+        "valid",
+        "invalid_baseline",
+        "injection_failed",
+        "dirty",
+        "error"
+      ],
       "description": "Overall run status; only 'valid' enters calibration/evaluation"
     },
     "injection": {
       "type": "object",
-      "required": ["method", "status", "injected_at"],
+      "required": [
+        "method",
+        "status",
+        "injected_at"
+      ],
       "additionalProperties": false,
       "properties": {
         "method": {
@@ -82,11 +97,18 @@
         },
         "status": {
           "type": "string",
-          "enum": ["pending", "verified", "failed"],
+          "enum": [
+            "pending",
+            "verified",
+            "failed"
+          ],
           "description": "Injection verification result"
         },
         "injected_at": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "date-time",
           "description": "ISO-8601 timestamp when injection was applied"
         },
@@ -102,7 +124,11 @@
     },
     "workload": {
       "type": "object",
-      "required": ["rate_per_second", "warmup_seconds", "votes_submitted"],
+      "required": [
+        "rate_per_second",
+        "warmup_seconds",
+        "votes_submitted"
+      ],
       "additionalProperties": false,
       "properties": {
         "rate_per_second": {
@@ -124,11 +150,21 @@
     },
     "diagnosis": {
       "type": "object",
-      "required": ["decision", "abstained", "posterior", "tests", "total_tests", "elapsed_seconds"],
+      "required": [
+        "decision",
+        "abstained",
+        "posterior",
+        "tests",
+        "total_tests",
+        "elapsed_seconds"
+      ],
       "additionalProperties": false,
       "properties": {
         "decision": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Diagnosed cause label or 'abstain'"
         },
         "abstained": {
@@ -149,7 +185,12 @@
           "description": "Tests executed during investigation",
           "items": {
             "type": "object",
-            "required": ["test_id", "outcome", "execution_status", "latency_ms"],
+            "required": [
+              "test_id",
+              "outcome",
+              "execution_status",
+              "latency_ms"
+            ],
             "additionalProperties": false,
             "properties": {
               "test_id": {
@@ -158,12 +199,42 @@
               },
               "outcome": {
                 "type": "string",
-                "enum": ["connected", "refused", "timeout", "error", "unknown", "running", "stopped", "restarting", "correct", "incorrect", "healthy", "unreachable", "degraded", "none", "recent", "repeated", "normal", "high", "critical", "exhausted", "consistent", "delayed", "inconsistent", "redis_error", "postgres_error", "other_error"],
+                "enum": [
+                  "connected",
+                  "refused",
+                  "timeout",
+                  "error",
+                  "unknown",
+                  "running",
+                  "stopped",
+                  "restarting",
+                  "correct",
+                  "incorrect",
+                  "healthy",
+                  "unreachable",
+                  "degraded",
+                  "none",
+                  "recent",
+                  "repeated",
+                  "normal",
+                  "high",
+                  "critical",
+                  "exhausted",
+                  "consistent",
+                  "delayed",
+                  "inconsistent",
+                  "redis_error",
+                  "postgres_error",
+                  "other_error"
+                ],
                 "description": "Normalized diagnostic outcome"
               },
               "execution_status": {
                 "type": "string",
-                "enum": ["completed", "error"],
+                "enum": [
+                  "completed",
+                  "error"
+                ],
                 "description": "Test execution status"
               },
               "latency_ms": {
@@ -172,27 +243,50 @@
                 "description": "Test latency in milliseconds"
               },
               "observed_at": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "format": "date-time",
                 "description": "ISO-8601 timestamp of evidence observation"
               },
               "collector_version": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "description": "Collector version/commit"
               },
               "energy_joules": {
-                "type": ["number", "null"],
+                "type": [
+                  "number",
+                  "null"
+                ],
                 "minimum": 0,
                 "description": "Measured or estimated energy in joules"
               },
               "energy_method": {
                 "type": "string",
-                "enum": ["measured", "estimated", "not_measured"],
+                "enum": [
+                  "measured",
+                  "estimated",
+                  "not_measured"
+                ],
                 "description": "Energy measurement method"
               },
               "raw_reference": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "description": "Reference to raw collector output file"
+              },
+              "target_identifier": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Identity of the observed target; separate from a raw evidence artifact path"
               }
             }
           }
@@ -210,12 +304,18 @@
       }
     },
     "ground_truth_label": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "True fault cause label (only present after diagnosis is frozen)"
     },
     "scored": {
       "type": "object",
-      "required": ["correct", "abstained"],
+      "required": [
+        "correct",
+        "abstained"
+      ],
       "additionalProperties": false,
       "properties": {
         "correct": {
@@ -229,30 +329,40 @@
       }
     },
     "baseline_energy": {
-      "type": ["object", "null"],
-      "description": "Host baseline energy measurement (no lab running)",
-      "additionalProperties": false,
+      "type": [
+        "object",
+        "null"
+      ],
       "properties": {
         "energy_joules": {
-          "type": ["number", "null"],
-          "minimum": 0,
-          "description": "Baseline energy in joules"
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
         },
         "energy_method": {
-          "type": "string",
-          "enum": ["measured", "estimated", "not_measured"],
-          "description": "Energy measurement method"
+          "enum": [
+            "measured",
+            "estimated",
+            "not_measured"
+          ]
         },
         "duration_seconds": {
           "type": "number",
-          "minimum": 0,
-          "description": "Baseline measurement duration"
+          "minimum": 0
         },
         "hardware_context": {
-          "type": "object",
-          "description": "Hardware/OS context for energy reporting"
+          "type": "object"
         }
-      }
+      },
+      "required": [
+        "energy_joules",
+        "energy_method",
+        "duration_seconds",
+        "hardware_context"
+      ],
+      "additionalProperties": false
     }
   }
 }

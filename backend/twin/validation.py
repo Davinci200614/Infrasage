@@ -6,13 +6,11 @@ Runs the seven validation checks and stores results in experiments/validation/.
 from __future__ import annotations
 
 import json
-import time
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
-from backend.twin import LAB, ROOT, catalogues
+from backend.twin import ROOT, catalogues
 
 
 VALIDATION_DIR = ROOT / "experiments" / "validation"
@@ -189,7 +187,7 @@ def check_injection_verification() -> ValidationResult:
         attempts = 3
         
         for i in range(attempts):
-            run_id = f"validation-inject-{fault_name}-{i:02d}"
+            _ = f"validation-inject-{fault_name}-{i:02d}"
             try:
                 # Fresh lab for each attempt
                 lab.reset()
@@ -223,12 +221,6 @@ def check_injection_verification() -> ValidationResult:
 def check_fault_symptom_coupling() -> ValidationResult:
     """Each modeled fault produces its expected symptom in the workload."""
     from backend.twin.runner import experiment
-    from backend.twin.runner import lab
-    from backend.twin import docker, LAB, LAB_PROJECT
-    
-    COMPOSE = (
-        "compose", "-p", LAB_PROJECT, "-f", str(LAB / "compose.yaml"), "-f", str(LAB / "docker-compose.infrasage.yml"),
-    )
     
     results = {}
     expected_symptoms = {

@@ -33,9 +33,16 @@ def test_load_existing_catalogues():
     assert result.metadata['model']['status'] == 'synthetic_provisional_not_calibrated'
     assert result.metadata['model']['source_dataset'] is None
     assert result.metadata['knowledge']['version'] == '0.1.0'
-    for metadata in result.test_metadata.values():
-        assert metadata['availability']['live'] is False
-        assert metadata['execution']['live_binding'] is None
+    # Two tests are live-enabled (Docker-backed, verified in twin lab)
+    live_tests = {'worker_runtime_state', 'worker_redis_connectivity'}
+    for test_id, metadata in result.test_metadata.items():
+        if test_id in live_tests:
+            assert metadata['availability']['live'] is True
+            assert metadata['execution']['binding_status'] == 'verified'
+            assert metadata['execution']['live_binding'] is not None
+        else:
+            assert metadata['availability']['live'] is False
+            assert metadata['execution']['live_binding'] is None
         assert metadata['evidence_group']
         assert metadata['source_basis']
 

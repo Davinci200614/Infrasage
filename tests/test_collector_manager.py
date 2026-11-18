@@ -52,7 +52,10 @@ def test_loader_compatibility_and_runtime_routing(manager,provider,loaded):
     assert r['observed_at'] and r['retrieved_at']
     assert r['duration_seconds']>=0
     assert loaded.test_metadata==original
-    assert sum(d['availability']['live'] for d in loaded.test_metadata.values())==0
+    live_tests = {'worker_runtime_state', 'worker_redis_connectivity'}
+    assert sum(d['availability']['live'] for d in loaded.test_metadata.values()) == len(live_tests)
+    for tid in live_tests:
+        assert loaded.test_metadata[tid]['availability']['live'] is True
     provider.client.containers.list.assert_not_called()
     assert provider.client.containers.get.call_count==2
 

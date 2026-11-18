@@ -114,6 +114,19 @@ run script.
 - Don't modify `frontend/` or the Voting App source for twin work; overrides go
   in `lab/docker-compose.infrasage.yml`.
 
+## Live Tests (Phase 7)
+
+Only 2 tests have `live: true` in `tests.yaml` (both Docker-backed, verified in twin lab):
+- `worker_runtime_state` — Docker `container_process_state`
+- `worker_redis_connectivity` — Docker `worker_to_redis_tcp` (TCP probe from worker namespace)
+
+All 11 Netdata tests and 6 precision tests remain `live: false` — no Netdata agent runs in the twin lab, and precision probes lack verified bindings.
+
+## Calibration Policy (Phase 8)
+
+- Old calibration data (pre-merge schema) tagged `schema_version: "pre-merge"` and moved to `experiments/archive/` (no such data exists in current repo).
+- `other_unknown` hypothesis documented in `probabilities.json` with `usage_policy.live_diagnosis: false` — it is an uninformative placeholder; live diagnosis abstains on unknown.
+
 ## Safety
 
 - Lab work needs `/var/run/docker.sock`, i.e. host-level root. Run it on a
@@ -144,7 +157,7 @@ run script.
 ## To start the lab
 
 ```sh
-docker compose -p infrasage-lab -f lab/compose.yaml -f lab/docker-compose.infrasage.yml up -d
+docker compose -p infrasage-lab -f lab/compose.twin.yaml -f lab/docker-compose.infrasage.yml up -d
 ```
 
 The lab runs on localhost ports (bound to `127.0.0.1` in the override). Verify

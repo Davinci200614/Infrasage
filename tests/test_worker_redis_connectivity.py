@@ -80,7 +80,12 @@ def test_socket_outcomes_through_manager_adapter(manager,provider,loaded,outcome
     assert r.metadata['execution_result']==result
     assert provider.client.api.timeout==60
     assert helper.remove.call_count==2
-    assert all(not d['availability']['live'] for d in loaded.test_metadata.values())
+    live_tests = {'worker_runtime_state', 'worker_redis_connectivity'}
+    for tid, d in loaded.test_metadata.items():
+        if tid in live_tests:
+            assert d['availability']['live'] is True
+        else:
+            assert d['availability']['live'] is False
     creation=provider.client.containers.create.call_args
     assert creation.args==(IID,)
     assert creation.kwargs['network_mode']=='container:'+CID
